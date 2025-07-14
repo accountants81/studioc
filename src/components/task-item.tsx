@@ -1,0 +1,146 @@
+"use client";
+
+import { useContext } from "react";
+import { format, formatDistanceToNow } from "date-fns";
+import { ar } from 'date-fns/locale';
+import {
+  Flag,
+  Tag,
+  Calendar,
+  MoreHorizontal,
+  Trash2,
+  Edit,
+  Circle,
+  CheckCircle,
+  Loader,
+} from "lucide-react";
+
+import { Task, TaskPriority, TaskStatus } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Checkbox } from "@/components/ui/checkbox";
+import { TasksContext } from "@/contexts/task-provider";
+import { AddTaskDialog } from "./add-task-dialog";
+import { useToast } from "@/hooks/use-toast";
+
+type TaskItemProps = {
+  task: Task;
+};
+
+const priorityIcons: Record<TaskPriority, React.ReactNode> = {
+  high: <Flag className="h-4 w-4 text-red-500" />,
+  medium: <Flag className="h-4 w-4 text-yellow-500" />,
+  low: <Flag className="h-4 w-4 text-blue-500" />,
+};
+
+const statusIcons: Record<TaskStatus, React.ReactNode> = {
+    pending: <Circle className="h-4 w-4 text-muted-foreground" />,
+    'in-progress': <Loader className="h-4 w-4 text-blue-500 animate-spin" />,
+    completed: <CheckCircle className="h-4 w-4 text-green-500" />,
+}
+
+const categoryDisplay: Record<string, string> = {
+    personal: 'شخصي',
+    work: 'عمل',
+    study: 'دراسة',
+    other: 'أخرى'
+}
+
+
+export function TaskItem({ task }: TaskItemProps) {
+  const { updateTask, deleteTask } = useContext(TasksContext);
+  const { toast } = useToast();
+
+  const handleStatusChange = (status: TaskStatus) => {
+    updateTask(task.id, { ...task, status });
+    toast({ title: `تم تحديث حالة المهمة إلى: ${status === 'completed' ? 'مكتملة' : status === 'in-progress' ? 'قيد التنفيذ' : 'قيد الانتظار'}` });
+  };
+  
+  const handleCheckedChange = (checked: boolean) => {
+    handleStatusChange(checked ? 'completed' : 'pending');
+  };
+
+  const handleDelete = () => {
+    deleteTask(task.id);
+    toast({ title: "تم حذف المهمة", variant: "destructive" });
+  };
+
+  const isCompleted = task.status === 'completed';
+
+  return (
+    <div
+      className={cn(
+        "flex items-start gap-4 rounded-lg border bg-card p-4 transition-all hover:shadow-md",
+        isCompleted && "bg-muted/50 text-muted-foreground"
+      )}
+    >
+      <div className="flex h-full items-center pt-1">
+        <Checkbox
+          id={`task-${task.id}`}
+          checked={isCompleted}
+          onCheckedChange={handleCheckedChange}
+          className={cn("h-5 w-5 rounded-full", isCompleted ? "border-green-500 text-green-500" : "")}
+          aria-label={`Mark task ${task.title} as ${isCompleted ? 'not completed' : 'completed'}`}
+        />
+      </div>
+      <div className="flex-1">
+        <p className={cn("font-medium text-card-foreground", isCompleted && "line-through")}>
+          {task.title}
+        </p>
+        {task.description && (
+          <p className="text-sm text-muted-foreground">{task.description}</p>
+        )}
+        <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <Calendar className="h-4 w-4" />
+            <span>{format(new Date(task.dueDate), "d MMMM yyyy", { locale: ar })}</span>
+            <span className="text-xs">({formatDistanceToNow(new Date(task.dueDate), { addSuffix: true, locale: ar })})</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            {priorityIcons[task.priority]}
+            <span>
+                {task.priority === 'high' ? 'أولوية عالية' : task.priority === 'medium' ? 'أولوية متوسطة' : 'أولوية منخفضة'}
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Tag className="h-4 w-4" />
+            <Badge variant="outline">{categoryDisplay[task.category] || task.category}</Badge>
+          </div>
+           <div className="flex items-center gap-1.5">
+            {statusIcons[task.status]}
+            <span>
+                {task.status === 'pending' ? 'قيد الانتظار' : task.status === 'in-progress' ? 'قيد التنفيذ' : 'مكتملة'}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div className="flex items-center">
+        <AddTaskDialog task={task}>
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" aria-label="Edit task">
+                <Edit className="h-4 w-4" />
+            </Button>
+        </AddTaskDialog>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" aria-label="More options">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={handleDelete} className="text-red-500 focus:text-red-500 focus:bg-red-50">
+              <Trash2 className="ml-2 h-4 w-4" />
+              <span>حذف</span>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+    </div>
+  );
+}
