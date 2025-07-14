@@ -12,11 +12,11 @@ import {
 import { TimeFlowLogo } from "./logo";
 import {
   LayoutDashboard,
-  CalendarDays,
   CalendarRange,
   Calendar,
   Repeat,
   Notebook,
+  Mic,
 } from "lucide-react";
 
 const navItems = [
@@ -25,6 +25,7 @@ const navItems = [
   { href: "/monthly", label: "مهام الشهر", icon: Calendar },
   { href: "/ongoing", label: "مهام مستمرة", icon: Repeat },
   { href: "/notes", label: "ملاحظات", icon: Notebook },
+  { href: "/voice-memos", label: "مذكراتي الصوتية", icon: Mic },
 ];
 
 export default function SidebarNav() {
