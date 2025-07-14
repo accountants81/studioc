@@ -133,13 +133,11 @@ export default function SidebarNav() {
         id: crypto.randomUUID(),
         name: newSectionName.trim(),
       };
-      setCustomSections(prevSections => {
-        const updatedSections = [...prevSections, newSection];
-        // Navigate to the new section immediately after state update
-        router.push(`/custom/${newSection.id}`);
-        handleLinkClick();
-        return updatedSections;
-      });
+      setCustomSections(prevSections => [...prevSections, newSection]);
+      
+      // Navigate to the new section after state update
+      router.push(`/custom/${newSection.id}`);
+      handleLinkClick();
       setNewSectionName("");
     }
   };
