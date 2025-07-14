@@ -9,8 +9,9 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from "@/components/ui/sidebar";
-import { MomentumFlowLogo } from "./logo";
+import { TimeFlowLogo } from "./logo";
 import {
+  LayoutDashboard,
   CalendarDays,
   CalendarRange,
   Calendar,
@@ -19,11 +20,11 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { href: "/", label: "المهام اليومية", icon: CalendarDays },
-  { href: "/weekly", label: "المهام الأسبوعية", icon: CalendarRange },
-  { href: "/monthly", label: "المهام الشهرية", icon: Calendar },
-  { href: "/ongoing", label: "المهام المستمرة", icon: Repeat },
-  { href: "/notes", label: "مهام عامة", icon: Notebook },
+  { href: "/", label: "لوحة التحكم", icon: LayoutDashboard },
+  { href: "/weekly", label: "مهام الأسبوع", icon: CalendarRange },
+  { href: "/monthly", label: "مهام الشهر", icon: Calendar },
+  { href: "/ongoing", label: "مهام مستمرة", icon: Repeat },
+  { href: "/notes", label: "ملاحظات", icon: Notebook },
 ];
 
 export default function SidebarNav() {
@@ -32,7 +33,7 @@ export default function SidebarNav() {
   return (
     <>
       <SidebarHeader>
-        <MomentumFlowLogo />
+        <TimeFlowLogo />
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>

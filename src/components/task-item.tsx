@@ -1,7 +1,7 @@
 "use client";
 
 import { useContext } from "react";
-import { format, formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, isPast, isToday } from "date-fns";
 import { ar } from 'date-fns/locale';
 import {
   Flag,
@@ -73,12 +73,14 @@ export function TaskItem({ task }: TaskItemProps) {
   };
 
   const isCompleted = task.status === 'completed';
+  const isOverdue = !isCompleted && isPast(new Date(task.dueDate)) && !isToday(new Date(task.dueDate));
 
   return (
     <div
       className={cn(
         "flex items-start gap-4 rounded-lg border bg-card p-4 transition-all hover:shadow-md",
-        isCompleted && "bg-muted/50 text-muted-foreground"
+        isCompleted && "border-green-500/40 bg-green-500/5",
+        isOverdue && "border-destructive/40 bg-destructive/5"
       )}
     >
       <div className="flex h-full items-center pt-1">
@@ -91,14 +93,14 @@ export function TaskItem({ task }: TaskItemProps) {
         />
       </div>
       <div className="flex-1">
-        <p className={cn("font-medium text-card-foreground", isCompleted && "line-through")}>
+        <p className={cn("font-medium text-card-foreground", isCompleted && "line-through text-muted-foreground")}>
           {task.title}
         </p>
         {task.description && (
           <p className="text-sm text-muted-foreground">{task.description}</p>
         )}
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
-          <div className="flex items-center gap-1.5">
+          <div className={cn("flex items-center gap-1.5", isOverdue && "text-destructive font-medium")}>
             <Calendar className="h-4 w-4" />
             <span>{format(new Date(task.dueDate), "d MMMM yyyy", { locale: ar })}</span>
             <span className="text-xs">({formatDistanceToNow(new Date(task.dueDate), { addSuffix: true, locale: ar })})</span>
@@ -134,7 +136,7 @@ export function TaskItem({ task }: TaskItemProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleDelete} className="text-red-500 focus:text-red-500 focus:bg-red-50">
+            <DropdownMenuItem onClick={handleDelete} className="text-destructive focus:text-destructive focus:bg-destructive/10">
               <Trash2 className="ml-2 h-4 w-4" />
               <span>حذف</span>
             </DropdownMenuItem>

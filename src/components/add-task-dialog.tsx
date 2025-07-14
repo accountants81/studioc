@@ -44,6 +44,7 @@ import { TasksContext } from "@/contexts/task-provider";
 import { useToast } from "@/hooks/use-toast";
 import React from "react";
 import { Switch } from "./ui/switch";
+import { Label } from "./ui/label";
 
 type AddTaskDialogProps = {
   children: React.ReactNode;
@@ -80,7 +81,15 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
         dueDate: new Date(task.dueDate),
       });
     } else if (open && !isEditMode) {
-      form.reset();
+      form.reset({
+          title: "",
+          description: "",
+          dueDate: new Date(),
+          priority: "medium",
+          status: "pending",
+          category: "personal",
+          isRecurring: false,
+      });
     }
   }, [open, task, isEditMode, form]);
 
@@ -261,6 +270,7 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
                         <FormControl>
                           <div className="flex items-center space-x-2">
                             <Switch
+                              id="isRecurring-switch"
                               checked={field.value}
                               onCheckedChange={field.onChange}
                             />

@@ -6,16 +6,16 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function NotesPage() {
-  const [notes, setNotes] = useLocalStorage("momentumflow-notes", "");
+  const [notes, setNotes] = useLocalStorage("timeflow-notes", "");
 
   return (
     <main className="container mx-auto py-4 sm:py-6 lg:py-8">
-      <PageHeader title="مهام عامة" />
+      <PageHeader title="ملاحظات" />
       <Card>
         <CardHeader>
           <CardTitle>ملاحظات وأفكار</CardTitle>
           <CardDescription>
-            هنا يمكنك كتابة أي ملاحظات أو أفكار أو خطط. سيتم حفظ كل شيء تلقائيًا.
+            هنا يمكنك كتابة أي ملاحظات أو أفكار أو أهداف طويلة المدى. سيتم حفظ كل شيء تلقائيًا.
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-export function MomentumFlowLogo({ className }: { className?: string }) {
+export function TimeFlowLogo({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center gap-2", className)}>
         <svg
@@ -12,21 +12,21 @@ export function MomentumFlowLogo({ className }: { className?: string }) {
             className="text-primary"
             >
             <path
-                d="M6 26V9.5L12.5 18L19 9.5V26"
+                d="M16 4C9.37258 4 4 9.37258 4 16C4 22.6274 9.37258 28 16 28C22.6274 28 28 22.6274 28 16C28 9.37258 22.6274 4 16 4Z"
                 stroke="currentColor"
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
             />
             <path
-                d="M26 13V6H19"
+                d="M16 9V16H22"
                 stroke="currentColor"
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
             />
             </svg>
-        <span className="text-xl font-semibold text-foreground">MomentumFlow</span>
+        <span className="text-xl font-semibold text-sidebar-foreground">TimeFlow</span>
     </div>
 
   );

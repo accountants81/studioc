@@ -21,7 +21,7 @@ export const TasksContext = createContext<TasksContextType>({
 });
 
 export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
-  const [tasks, setTasks] = useLocalStorage<Task[]>('momentumflow-tasks', []);
+  const [tasks, setTasks] = useLocalStorage<Task[]>('timeflow-tasks', []);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
