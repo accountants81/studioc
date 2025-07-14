@@ -1,21 +1,30 @@
+"use client"
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { TaskProvider } from "@/contexts/task-provider";
 import AppShell from "@/components/app-shell";
+import { useLocalStorage } from '@/hooks/use-local-storage';
+import { useEffect } from 'react';
 
-export const metadata: Metadata = {
-  title: 'MomentumFlow',
-  description: 'Organize your time and tasks.',
-};
+// export const metadata: Metadata = {
+//   title: 'MomentumFlow',
+//   description: 'Organize your time and tasks.',
+// };
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [lang] = useLocalStorage('app-lang', 'ar');
+
+  useEffect(() => {
+    document.title = lang === 'ar' ? 'MomentumFlow | نظّم وقتك' : 'MomentumFlow | Organize Your Time';
+  }, [lang]);
+
   return (
-    <html lang="ar" dir="rtl" suppressHydrationWarning>
+    <html lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

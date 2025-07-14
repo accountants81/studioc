@@ -4,13 +4,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { PageHeader } from '@/components/page-header';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Mic, StopCircle, Trash2, Edit, Play, Pause, Save } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Mic, StopCircle, Trash2, Edit, Play, Pause, Save, Wand2, Loader } from 'lucide-react';
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { transcribeAudio } from '@/ai/flows/transcribe-flow';
+import { Skeleton } from '@/components/ui/skeleton';
 
 type Recording = {
   id: string;
@@ -18,6 +20,7 @@ type Recording = {
   audioUrl: string;
   date: string;
   duration: number;
+  transcription?: string;
 };
 
 export default function VoiceMemosPage() {
@@ -27,7 +30,7 @@ export default function VoiceMemosPage() {
   const [recordingStatus, setRecordingStatus] = useState<'inactive' | 'recording'>('inactive');
   const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const [audio, setAudio] = useState<string | null>(null);
-  const [recordings, setRecordings] = useLocalStorage<Recording[]>('timeflow-recordings', []);
+  const [recordings, setRecordings] = useLocalStorage<Recording[]>('timeflow-recordings-v2', []);
   const [timer, setTimer] = useState(0);
   const timerInterval = useRef<NodeJS.Timeout | null>(null);
 
@@ -66,7 +69,6 @@ export default function VoiceMemosPage() {
     };
     setAudioChunks(localAudioChunks);
 
-    // Start timer
     setTimer(0);
     timerInterval.current = setInterval(() => {
         setTimer(prev => prev + 1);
@@ -91,7 +93,6 @@ export default function VoiceMemosPage() {
   const saveRecording = () => {
     if (!audio) return;
     
-    // A bit of a hack to get the blob from the object URL
     fetch(audio)
     .then(res => res.blob())
     .then(blob => {
@@ -105,7 +106,7 @@ export default function VoiceMemosPage() {
           date: new Date().toISOString(),
           duration: timer,
         };
-        setRecordings([...recordings, newRecording]);
+        setRecordings([newRecording, ...recordings]);
         setAudio(null);
         setTimer(0);
       };
@@ -119,6 +120,10 @@ export default function VoiceMemosPage() {
   
   const renameRecording = (id: string, newName: string) => {
     setRecordings(recordings.map(rec => rec.id === id ? {...rec, name: newName} : rec));
+  }
+
+  const updateRecording = (id: string, updates: Partial<Recording>) => {
+    setRecordings(recordings.map(rec => rec.id === id ? {...rec, ...updates} : rec));
   }
   
   const formatTime = (seconds: number) => {
@@ -151,12 +156,14 @@ export default function VoiceMemosPage() {
           {audio && (
             <div className="w-full p-4 bg-muted/50 rounded-lg flex items-center justify-between">
               <audio src={audio} controls className="flex-grow" />
-              <Button onClick={saveRecording} variant="ghost" size="icon">
-                <Save className="h-5 w-5 text-green-600" />
-              </Button>
-              <Button onClick={() => setAudio(null)} variant="ghost" size="icon">
-                <Trash2 className="h-5 w-5 text-red-600" />
-              </Button>
+              <div className="flex items-center">
+                 <Button onClick={saveRecording} variant="ghost" size="icon">
+                    <Save className="h-5 w-5 text-green-600" />
+                </Button>
+                <Button onClick={() => setAudio(null)} variant="ghost" size="icon">
+                    <Trash2 className="h-5 w-5 text-red-600" />
+                </Button>
+              </div>
             </div>
           )}
         </CardContent>
@@ -168,9 +175,9 @@ export default function VoiceMemosPage() {
         </CardHeader>
         <CardContent>
           {recordings.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {recordings.map((rec) => (
-                <RecordingItem key={rec.id} recording={rec} onDelete={deleteRecording} onRename={renameRecording} />
+                <RecordingItem key={rec.id} recording={rec} onDelete={deleteRecording} onRename={renameRecording} onUpdate={updateRecording} />
               ))}
             </div>
           ) : (
@@ -186,11 +193,12 @@ export default function VoiceMemosPage() {
   );
 }
 
-function RecordingItem({ recording, onDelete, onRename }: { recording: Recording, onDelete: (id: string) => void, onRename: (id: string, name: string) => void }) {
+function RecordingItem({ recording, onDelete, onRename, onUpdate }: { recording: Recording, onDelete: (id: string) => void, onRename: (id: string, name: string) => void, onUpdate: (id: string, updates: Partial<Recording>) => void }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isRenaming, setIsRenaming] = useState(false);
   const [newName, setNewName] = useState(recording.name);
+  const [isTranscribing, setIsTranscribing] = useState(false);
 
   const togglePlay = () => {
     if (!audioRef.current) return;
@@ -199,15 +207,23 @@ function RecordingItem({ recording, onDelete, onRename }: { recording: Recording
     } else {
       audioRef.current.play();
     }
-    setIsPlaying(!isPlaying);
   };
   
   useEffect(() => {
     const audio = audioRef.current;
     if (audio) {
-      audio.addEventListener('ended', () => setIsPlaying(false));
+      const handlePlay = () => setIsPlaying(true);
+      const handlePause = () => setIsPlaying(false);
+      const handleEnded = () => setIsPlaying(false);
+
+      audio.addEventListener('play', handlePlay);
+      audio.addEventListener('pause', handlePause);
+      audio.addEventListener('ended', handleEnded);
+
       return () => {
-        audio.removeEventListener('ended', () => setIsPlaying(false));
+        audio.removeEventListener('play', handlePlay);
+        audio.removeEventListener('pause', handlePause);
+        audio.removeEventListener('ended', handleEnded);
       };
     }
   }, []);
@@ -216,62 +232,107 @@ function RecordingItem({ recording, onDelete, onRename }: { recording: Recording
       onRename(recording.id, newName);
       setIsRenaming(false);
   }
+
+  const handleTranscribe = async () => {
+    setIsTranscribing(true);
+    try {
+      const result = await transcribeAudio({ audioUri: recording.audioUrl });
+      onUpdate(recording.id, { transcription: result.transcription });
+    } catch (error) {
+      console.error("Transcription failed:", error);
+      alert("فشل تحويل الصوت إلى نص.");
+    } finally {
+      setIsTranscribing(false);
+    }
+  }
   
   const formatTime = (seconds: number) => {
+    if (isNaN(seconds)) return "00:00";
     const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
+    const remainingSeconds = Math.floor(seconds % 60);
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   }
 
 
   return (
-    <div className="flex items-center gap-4 rounded-lg border bg-card p-4 transition-all hover:shadow-md">
-      <audio ref={audioRef} src={recording.audioUrl} preload="metadata" />
-      <Button onClick={togglePlay} variant="ghost" size="icon" className="h-10 w-10 rounded-full">
-        {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-      </Button>
-      <div className="flex-1">
-        {isRenaming ? (
-            <div className="flex items-center gap-2">
-                <Input value={newName} onChange={(e) => setNewName(e.target.value)} className="h-8" />
-                <Button onClick={handleRename} size="sm">حفظ</Button>
-                <Button onClick={() => setIsRenaming(false)} size="sm" variant="ghost">إلغاء</Button>
+    <Card className="transition-all hover:shadow-md">
+       <CardContent className="p-4 flex flex-col gap-4">
+        <div className="flex items-center gap-4">
+          <audio ref={audioRef} src={recording.audioUrl} preload="metadata" className="hidden" />
+          <Button onClick={togglePlay} variant="outline" size="icon" className="h-12 w-12 rounded-full flex-shrink-0">
+            {isPlaying ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
+          </Button>
+          <div className="flex-1 min-w-0">
+            {isRenaming ? (
+                <div className="flex items-center gap-2">
+                    <Input value={newName} onChange={(e) => setNewName(e.target.value)} className="h-8" />
+                    <Button onClick={handleRename} size="sm">حفظ</Button>
+                    <Button onClick={() => setIsRenaming(false)} size="sm" variant="ghost">إلغاء</Button>
+                </div>
+            ) : (
+                <p className="font-semibold text-card-foreground truncate">{recording.name}</p>
+            )}
+            <div className="text-xs text-muted-foreground flex items-center gap-2 mt-1">
+              <span>{format(new Date(recording.date), 'd MMMM yyyy, HH:mm')}</span>
+              <span>•</span>
+              <span>المدة: {formatTime(recording.duration)}</span>
             </div>
-        ) : (
-             <p className="font-medium text-card-foreground">{recording.name}</p>
-        )}
-       
-        <div className="text-sm text-muted-foreground flex items-center gap-4 mt-1">
-          <span>{format(new Date(recording.date), 'd MMMM yyyy, HH:mm')}</span>
-          <span>المدة: {formatTime(recording.duration)}</span>
-        </div>
-      </div>
-      <div className="flex items-center">
-        <Button onClick={() => setIsRenaming(true)} variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-          <Edit className="h-4 w-4" />
-        </Button>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive hover:text-destructive">
-              <Trash2 className="h-4 w-4" />
+          </div>
+          <div className="flex items-center">
+            <Button onClick={() => setIsRenaming(true)} variant="ghost" size="icon" className="h-8 w-8 rounded-full">
+              <Edit className="h-4 w-4" />
             </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
-              <AlertDialogDescription>
-                سيتم حذف هذا التسجيل نهائيًا. لا يمكن التراجع عن هذا الإجراء.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>إلغاء</AlertDialogCancel>
-              <AlertDialogAction onClick={() => onDelete(recording.id)} className="bg-destructive hover:bg-destructive/90">
-                حذف
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
-    </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-destructive hover:text-destructive">
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    سيتم حذف هذا التسجيل نهائيًا. لا يمكن التراجع عن هذا الإجراء.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onDelete(recording.id)} className="bg-destructive hover:bg-destructive/90">
+                    حذف
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+        
+        {recording.audioUrl && (
+          <div className="w-full">
+            <audio src={recording.audioUrl} controls controlsList="nodownload" className="w-full h-10" />
+          </div>
+        )}
+       </CardContent>
+       {(recording.transcription !== undefined || isTranscribing) && (
+        <CardFooter className="p-4 pt-0">
+             {isTranscribing ? (
+                <div className="w-full space-y-2">
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-1/2" />
+                    <Skeleton className="h-4 w-5/6" />
+                </div>
+             ) : (
+                <p className="text-sm text-muted-foreground bg-muted/50 p-3 rounded-md w-full whitespace-pre-wrap">{recording.transcription || "لم يتم العثور على نص."}</p>
+             )}
+        </CardFooter>
+       )}
+       {!recording.transcription && !isTranscribing && (
+        <CardFooter className="p-4 pt-0 border-t mt-2">
+            <Button onClick={handleTranscribe} variant="outline" size="sm" className="w-full" disabled={isTranscribing}>
+                <Wand2 className="h-4 w-4 ml-2" />
+                <span>تحويل إلى نص</span>
+            </Button>
+        </CardFooter>
+       )}
+    </Card>
   );
 }

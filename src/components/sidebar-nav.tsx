@@ -21,7 +21,8 @@ import {
   Mic,
   PlusCircle,
   NotebookText,
-  Trash2
+  Trash2,
+  Languages,
 } from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
@@ -29,14 +30,44 @@ import { Input } from "./ui/input";
 import React from "react";
 import { Button } from "./ui/button";
 
-const staticNavItems = [
-  { href: "/", label: "لوحة التحكم", icon: LayoutDashboard },
-  { href: "/weekly", label: "مهام الأسبوع", icon: CalendarRange },
-  { href: "/monthly", label: "مهام الشهر", icon: Calendar },
-  { href: "/ongoing", label: "مهام مستمرة", icon: Repeat },
-  { href: "/notes", label: "ملاحظات", icon: Notebook },
-  { href: "/voice-memos", label: "مذكراتي الصوتية", icon: Mic },
-];
+const translations = {
+  ar: {
+    dashboard: "لوحة التحكم",
+    weekly: "مهام الأسبوع",
+    monthly: "مهام الشهر",
+    ongoing: "مهام مستمرة",
+    notes: "ملاحظات",
+    voiceMemos: "مذكراتي الصوتية",
+    addSection: "إضافة قسم جديد",
+    deleteSectionTitle: 'هل أنت متأكد من حذف قسم "{sectionName}"؟',
+    deleteSectionDesc: "سيتم حذف هذا القسم وجميع الملاحظات الموجودة بداخله نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
+    cancel: "إلغاء",
+    delete: "حذف",
+    addSectionTitle: "إضافة قسم جديد",
+    addSectionDesc: "أدخل اسمًا للقسم الجديد (مثل: أهدافي، مشاريع، أفكار).",
+    sectionNamePlaceholder: "اسم القسم",
+    add: "إضافة",
+    changeLang: "تغيير اللغة"
+  },
+  en: {
+    dashboard: "Dashboard",
+    weekly: "Weekly Tasks",
+    monthly: "Monthly Tasks",
+    ongoing: "Ongoing Tasks",
+    notes: "Notes",
+    voiceMemos: "Voice Memos",
+    addSection: "Add New Section",
+    deleteSectionTitle: 'Are you sure you want to delete "{sectionName}"?',
+    deleteSectionDesc: "This section and all its notes will be permanently deleted. This action cannot be undone.",
+    cancel: "Cancel",
+    delete: "Delete",
+    addSectionTitle: "Add New Section",
+    addSectionDesc: "Enter a name for the new section (e.g., My Goals, Projects, Ideas).",
+    sectionNamePlaceholder: "Section Name",
+    add: "Add",
+    changeLang: "Change Language"
+  },
+};
 
 type CustomSection = {
   id: string;
@@ -48,6 +79,18 @@ export default function SidebarNav() {
   const { setOpenMobile } = useSidebar();
   const [customSections, setCustomSections] = useLocalStorage<CustomSection[]>("timeflow-custom-sections", []);
   const [newSectionName, setNewSectionName] = React.useState("");
+  const [lang, setLang] = useLocalStorage<'ar' | 'en'>('app-lang', 'ar');
+
+  const t = translations[lang];
+
+  const staticNavItems = [
+    { href: "/", label: t.dashboard, icon: LayoutDashboard },
+    { href: "/weekly", label: t.weekly, icon: CalendarRange },
+    { href: "/monthly", label: t.monthly, icon: Calendar },
+    { href: "/ongoing", label: t.ongoing, icon: Repeat },
+    { href: "/notes", label: t.notes, icon: Notebook },
+    { href: "/voice-memos", label: t.voiceMemos, icon: Mic },
+  ];
 
   const handleLinkClick = () => {
     setOpenMobile(false);
@@ -66,9 +109,15 @@ export default function SidebarNav() {
   
   const handleDeleteSection = (id: string) => {
     setCustomSections(customSections.filter(section => section.id !== id));
-    // Also remove notes associated with this section
     localStorage.removeItem(`custom-section-notes-${id}`);
   }
+
+  const toggleLanguage = () => {
+    const newLang = lang === 'ar' ? 'en' : 'ar';
+    setLang(newLang);
+    document.documentElement.lang = newLang;
+    document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+  };
 
   return (
     <>
@@ -117,15 +166,15 @@ export default function SidebarNav() {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>هل أنت متأكد من حذف قسم "{section.name}"؟</AlertDialogTitle>
+                      <AlertDialogTitle>{t.deleteSectionTitle.replace('{sectionName}', section.name)}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        سيتم حذف هذا القسم وجميع الملاحظات الموجودة بداخله نهائيًا. لا يمكن التراجع عن هذا الإجراء.
+                        {t.deleteSectionDesc}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                      <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
                       <AlertDialogAction onClick={() => handleDeleteSection(section.id)} className="bg-destructive hover:bg-destructive/90">
-                        حذف
+                        {t.delete}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -134,23 +183,27 @@ export default function SidebarNav() {
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="gap-0">
+         <Button variant="ghost" className="w-full justify-start" onClick={toggleLanguage}>
+            <Languages className="ml-2 h-4 w-4" />
+            <span>{t.changeLang}</span>
+        </Button>
         <AlertDialog>
             <AlertDialogTrigger asChild>
                 <Button variant="ghost" className="w-full justify-start">
                     <PlusCircle className="ml-2 h-4 w-4" />
-                    <span>إضافة قسم جديد</span>
+                    <span>{t.addSection}</span>
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                <AlertDialogTitle>إضافة قسم جديد</AlertDialogTitle>
+                <AlertDialogTitle>{t.addSectionTitle}</AlertDialogTitle>
                 <AlertDialogDescription>
-                    أدخل اسمًا للقسم الجديد (مثل: أهدافي، مشاريع، أفكار).
+                   {t.addSectionDesc}
                 </AlertDialogDescription>
                 </AlertDialogHeader>
                 <Input 
-                    placeholder="اسم القسم" 
+                    placeholder={t.sectionNamePlaceholder}
                     value={newSectionName}
                     onChange={(e) => setNewSectionName(e.target.value)}
                     onKeyDown={(e) => {
@@ -161,8 +214,8 @@ export default function SidebarNav() {
                     }}
                 />
                 <AlertDialogFooter>
-                <AlertDialogCancel>إلغاء</AlertDialogCancel>
-                <AlertDialogAction id="add-section-confirm" onClick={handleAddSection} disabled={!newSectionName.trim()}>إضافة</AlertDialogAction>
+                <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                <AlertDialogAction id="add-section-confirm" onClick={handleAddSection} disabled={!newSectionName.trim()}>{t.add}</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
