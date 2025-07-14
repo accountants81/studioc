@@ -114,6 +114,12 @@ function StreakCard() {
   const { streak } = useStreak();
   const [lang] = useLocalStorage<'ar' | 'en'>('app-lang', 'ar');
   const t = translations[lang];
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
 
   return (
     <Card className="shadow-sm hover:shadow-md transition-shadow">
@@ -122,10 +128,19 @@ function StreakCard() {
         <Flame className="h-4 w-4 text-orange-500" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">
-          {streak} {t.streakDays}
-        </div>
-        <p className="text-xs text-muted-foreground">{t.streakSub}</p>
+        {isClient ? (
+            <>
+                <div className="text-2xl font-bold">
+                {streak} {t.streakDays}
+                </div>
+                <p className="text-xs text-muted-foreground">{t.streakSub}</p>
+            </>
+        ) : (
+            <div className="space-y-2 pt-1">
+                <Skeleton className="h-7 w-1/2" />
+                <Skeleton className="h-3 w-full" />
+            </div>
+        )}
       </CardContent>
     </Card>
   );
