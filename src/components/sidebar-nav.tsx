@@ -23,6 +23,11 @@ import {
   NotebookText,
   Trash2,
   Languages,
+  Shield,
+  Trophy,
+  Target,
+  LineChart,
+  Bot
 } from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
@@ -36,8 +41,13 @@ const translations = {
     weekly: "مهام الأسبوع",
     monthly: "مهام الشهر",
     ongoing: "مهام مستمرة",
+    analytics: "التحليلات",
     notes: "ملاحظات",
     voiceMemos: "مذكراتي الصوتية",
+    aiAssistant: "المساعد الذكي",
+    challenges: "التحديات",
+    goals: "الأهداف",
+    vault: "الخزنة الخاصة",
     addSection: "إضافة قسم جديد",
     deleteSectionTitle: 'هل أنت متأكد من حذف قسم "{sectionName}"؟',
     deleteSectionDesc: "سيتم حذف هذا القسم وجميع الملاحظات الموجودة بداخله نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
@@ -47,15 +57,21 @@ const translations = {
     addSectionDesc: "أدخل اسمًا للقسم الجديد (مثل: أهدافي، مشاريع، أفكار).",
     sectionNamePlaceholder: "اسم القسم",
     add: "إضافة",
-    changeLang: "Change Language"
+    changeLang: "Change Language",
+    customSections: "أقسامي الخاصة"
   },
   en: {
     dashboard: "Dashboard",
     weekly: "Weekly Tasks",
     monthly: "Monthly Tasks",
     ongoing: "Ongoing Tasks",
+    analytics: "Analytics",
     notes: "Notes",
     voiceMemos: "Voice Memos",
+    aiAssistant: "AI Assistant",
+    challenges: "Challenges",
+    goals: "Goals",
+    vault: "Private Vault",
     addSection: "Add New Section",
     deleteSectionTitle: 'Are you sure you want to delete "{sectionName}"?',
     deleteSectionDesc: "This section and all its notes will be permanently deleted. This action cannot be undone.",
@@ -65,7 +81,8 @@ const translations = {
     addSectionDesc: "Enter a name for the new section (e.g., My Goals, Projects, Ideas).",
     sectionNamePlaceholder: "Section Name",
     add: "Add",
-    changeLang: "تغيير اللغة"
+    changeLang: "تغيير اللغة",
+    customSections: "My Sections"
   },
 };
 
@@ -83,13 +100,26 @@ export default function SidebarNav() {
 
   const t = translations[lang];
 
-  const staticNavItems = [
+  const mainNavItems = [
     { href: "/", label: t.dashboard, icon: LayoutDashboard },
+    { href: "/analytics", label: t.analytics, icon: LineChart },
+  ];
+  
+  const taskNavItems = [
     { href: "/weekly", label: t.weekly, icon: CalendarRange },
     { href: "/monthly", label: t.monthly, icon: Calendar },
     { href: "/ongoing", label: t.ongoing, icon: Repeat },
-    { href: "/notes", label: t.notes, icon: Notebook },
-    { href: "/voice-memos", label: t.voiceMemos, icon: Mic },
+  ];
+
+  const personalNavItems = [
+      { href: "/notes", label: t.notes, icon: Notebook },
+      { href: "/voice-memos", label: t.voiceMemos, icon: Mic },
+  ];
+  
+  const futureNavItems = [
+      { href: "/challenges", label: t.challenges, icon: Trophy },
+      { href: "/goals", label: t.goals, icon: Target },
+      { href: "/vault", label: t.vault, icon: Shield },
   ];
 
   const handleLinkClick = () => {
@@ -121,14 +151,8 @@ export default function SidebarNav() {
     }
   };
 
-  return (
-    <>
-      <SidebarHeader>
-        <TimeFlowLogo />
-      </SidebarHeader>
-      <SidebarContent>
-        <SidebarMenu>
-          {staticNavItems.map((item) => (
+  const renderNavSection = (items: {href: string, label: string, icon: React.ElementType}[]) => (
+      items.map((item) => (
             <SidebarMenuItem key={item.href}>
               <Link href={item.href} onClick={handleLinkClick}>
                 <SidebarMenuButton
@@ -144,7 +168,25 @@ export default function SidebarNav() {
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
-          ))}
+          ))
+  );
+
+  return (
+    <>
+      <SidebarHeader>
+        <TimeFlowLogo />
+      </SidebarHeader>
+      <SidebarContent>
+        <SidebarMenu>
+          {renderNavSection(mainNavItems)}
+          <SidebarMenuItem className="px-2 pt-2 text-xs font-semibold text-muted-foreground tracking-wider">{t.ongoing}</SidebarMenuItem>
+          {renderNavSection(taskNavItems)}
+          <SidebarMenuItem className="px-2 pt-2 text-xs font-semibold text-muted-foreground tracking-wider">{t.notes}</SidebarMenuItem>
+          {renderNavSection(personalNavItems)}
+
+          {customSections.length > 0 && (
+             <SidebarMenuItem className="px-2 pt-2 text-xs font-semibold text-muted-foreground tracking-wider">{t.customSections}</SidebarMenuItem>
+          )}
            {customSections.map((section) => (
             <SidebarMenuItem key={section.id} className="group/item">
               <Link href={`/custom/${section.id}`} onClick={handleLinkClick}>
@@ -162,7 +204,7 @@ export default function SidebarNav() {
               </Link>
                <AlertDialog>
                   <AlertDialogTrigger asChild>
-                     <Button variant="ghost" size="icon" className="absolute right-1 top-1.5 h-6 w-6 opacity-0 group-hover/item:opacity-100">
+                     <Button variant="ghost" size="icon" className="absolute right-1 rtl:right-auto rtl:left-1 top-1.5 h-6 w-6 opacity-0 group-hover/item:opacity-100">
                         <Trash2 className="h-4 w-4 text-muted-foreground" />
                     </Button>
                   </AlertDialogTrigger>
@@ -183,6 +225,8 @@ export default function SidebarNav() {
                 </AlertDialog>
             </SidebarMenuItem>
           ))}
+            <SidebarMenuItem className="px-2 pt-2 text-xs font-semibold text-muted-foreground tracking-wider">Future Features</SidebarMenuItem>
+            {renderNavSection(futureNavItems)}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="gap-0">
@@ -207,7 +251,7 @@ export default function SidebarNav() {
                 <Input 
                     placeholder={t.sectionNamePlaceholder}
                     value={newSectionName}
-                    onChange={(e) => setNewSectionName(e.target.value)}
+                    onChange={(e) => setNewName(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
