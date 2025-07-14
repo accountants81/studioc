@@ -1,8 +1,10 @@
+
 "use client";
 
 import { useContext } from "react";
 import { format, formatDistanceToNow, isPast, isToday } from "date-fns";
 import { ar } from 'date-fns/locale';
+import Link from 'next/link';
 import {
   Flag,
   Tag,
@@ -13,6 +15,7 @@ import {
   Circle,
   CheckCircle,
   Loader,
+  Timer
 } from "lucide-react";
 
 import { Task, TaskPriority, TaskStatus } from "@/lib/types";
@@ -29,6 +32,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { TasksContext } from "@/contexts/task-provider";
 import { AddTaskDialog } from "./add-task-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
+
 
 type TaskItemProps = {
   task: Task;
@@ -123,7 +128,20 @@ export function TaskItem({ task }: TaskItemProps) {
           </div>
         </div>
       </div>
-      <div className="flex items-center">
+      <div className="flex items-center gap-1">
+         <Tooltip>
+            <TooltipTrigger asChild>
+                <Link href={`/focus/${task.id}`}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" aria-label="Focus on task">
+                        <Timer className="h-4 w-4" />
+                    </Button>
+                </Link>
+            </TooltipTrigger>
+            <TooltipContent>
+                <p>الدخول لوضع التركيز</p>
+            </TooltipContent>
+        </Tooltip>
+
         <AddTaskDialog task={task}>
             <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full" aria-label="Edit task">
                 <Edit className="h-4 w-4" />
