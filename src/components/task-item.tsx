@@ -85,7 +85,7 @@ const priorityIcons: Record<TaskPriority, React.ReactNode> = {
 
 const statusIcons: Record<TaskStatus, React.ReactNode> = {
     pending: <Circle className="h-4 w-4 text-muted-foreground" />,
-    'in-progress': <Loader className="h-4 w-4 text-blue-500 animate-spin" />,
+    'in-progress': <Loader className="h-4 w-4 text-primary animate-spin" />,
     completed: <CheckCircle className="h-4 w-4 text-green-500" />,
 }
 
@@ -123,9 +123,9 @@ export function TaskItem({ task }: TaskItemProps) {
   return (
     <div
       className={cn(
-        "flex items-start gap-4 rounded-lg border bg-card p-4 transition-all hover:shadow-lg hover:border-primary/50",
-        isCompleted && "border-green-500/40 bg-green-500/5",
-        isOverdue && "border-destructive/40 bg-destructive/5"
+        "flex items-start gap-4 rounded-lg border bg-card p-4 transition-all hover:shadow-md hover:-translate-y-1",
+        isCompleted && "border-green-500/20 bg-green-500/5",
+        isOverdue && "border-destructive/20 bg-destructive/5"
       )}
     >
       <div className="flex h-full items-center pt-1">
