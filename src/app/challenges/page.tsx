@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check, Trophy, Award, Medal, Star } from "lucide-react";
+import { Check, Trophy, Award, Medal, Star, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type Challenge = {
@@ -23,6 +23,7 @@ const translations = {
     pageDescription: "احتفل بإنجازاتك وتحدياتك التي أكملتها.",
     markAsDone: "إكمال التحدي",
     completed: "مكتمل!",
+    undo: "تراجع",
     challenge_1_title: "المبادر",
     challenge_1_desc: "أكملت مهمتك الأولى بنجاح.",
     challenge_2_title: "المنظم الأسبوعي",
@@ -41,6 +42,7 @@ const translations = {
     pageDescription: "Celebrate your achievements and completed challenges.",
     markAsDone: "Complete Challenge",
     completed: "Completed!",
+    undo: "Undo",
     challenge_1_title: "The Initiator",
     challenge_1_desc: "Completed your first task successfully.",
     challenge_2_title: "Weekly Planner",
@@ -60,7 +62,8 @@ export default function ChallengesPage() {
   const [lang] = useLocalStorage<'ar' | 'en'>('app-lang', 'ar');
   const t = translations[lang];
 
-  const initialChallenges: Challenge[] = [
+  // This function now returns a translated list of challenges
+  const getInitialChallenges = (): Challenge[] => [
     { id: "c1", title: t.challenge_1_title, description: t.challenge_1_desc, icon: Star, isCompleted: false },
     { id: "c2", title: t.challenge_2_title, description: t.challenge_2_desc, icon: Medal, isCompleted: false },
     { id: "c3", title: t.challenge_3_title, description: t.challenge_3_desc, icon: Award, isCompleted: false },
@@ -69,26 +72,40 @@ export default function ChallengesPage() {
     { id: "c6", title: t.challenge_6_title, description: t.challenge_6_desc, icon: Medal, isCompleted: false },
   ];
   
-  const [challenges, setChallenges] = useLocalStorage<Challenge[]>("momentum-challenges-v1", initialChallenges);
+  const [challenges, setChallenges] = useLocalStorage<Challenge[]>("momentum-challenges-v1", getInitialChallenges());
 
-  // This ensures that new challenges from code are added to localStorage if they don't exist
+  // This effect syncs challenge definitions (like titles) from code with localStorage
+  // without overriding the completion status.
   useState(() => {
+    const initialChallenges = getInitialChallenges();
     setChallenges(prev => {
-        const existingIds = new Set(prev.map(c => c.id));
-        const newChallenges = initialChallenges.filter(c => !existingIds.has(c.id));
-        return [...prev, ...newChallenges];
+        const prevMap = new Map(prev.map(c => [c.id, c]));
+        const syncedChallenges = initialChallenges.map(initialChallenge => {
+            const existingChallenge = prevMap.get(initialChallenge.id);
+            return {
+                ...initialChallenge,
+                isCompleted: existingChallenge?.isCompleted || false
+            };
+        });
+        return syncedChallenges;
     });
-  });
+  }, [lang]);
 
-  const handleCompleteChallenge = (id: string) => {
+  const handleToggleChallenge = (id: string) => {
+    const isCompleting = !challenges.find(c => c.id === id)?.isCompleted;
+    
     setChallenges(
-      challenges.map((c) => (c.id === id ? { ...c, isCompleted: true } : c))
+      challenges.map((c) => (c.id === id ? { ...c, isCompleted: !c.isCompleted } : c))
     );
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-    });
+
+    if (isCompleting) {
+        confetti({
+          particleCount: 150,
+          spread: 80,
+          origin: { y: 0.6 },
+          zIndex: 1000,
+        });
+    }
   };
 
   return (
@@ -112,16 +129,20 @@ export default function ChallengesPage() {
             </CardHeader>
             <CardContent>
                 <Button 
-                    onClick={() => handleCompleteChallenge(challenge.id)} 
-                    disabled={challenge.isCompleted}
-                    className={cn("w-full", challenge.isCompleted ? "bg-green-500 hover:bg-green-600" : "")}
+                    onClick={() => handleToggleChallenge(challenge.id)} 
+                    className={cn("w-full transition-colors", challenge.isCompleted ? "bg-green-600 hover:bg-green-700" : "")}
                 >
                     {challenge.isCompleted ? (
                         <>
-                            <Check className="mr-2 h-4 w-4" />
-                            {t.completed}
+                            <RotateCcw className="mr-2 h-4 w-4" />
+                            {t.undo}
                         </>
-                    ) : t.markAsDone}
+                    ) : (
+                       <>
+                         <Check className="mr-2 h-4 w-4" />
+                         {t.markAsDone}
+                       </>
+                    )}
                 </Button>
             </CardContent>
           </Card>
