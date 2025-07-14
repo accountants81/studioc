@@ -10,6 +10,7 @@ import { useLocalStorage } from '@/hooks/use-local-storage';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { format } from 'date-fns';
+import { cn } from '@/lib/utils';
 
 type Recording = {
   id: string;
@@ -90,22 +91,6 @@ export default function VoiceMemosPage() {
   const saveRecording = () => {
     if (!audio) return;
     
-    const reader = new FileReader();
-    reader.readAsDataURL(new Blob(audioChunks, { type: 'audio/webm' })); 
-    reader.onloadend = function() {
-        const base64data = reader.result as string;
-        const newRecording: Recording = {
-            id: crypto.randomUUID(),
-            name: `تسجيل ${format(new Date(), 'yyyy-MM-dd HH:mm')}`,
-            audioUrl: base64data,
-            date: new Date().toISOString(),
-            duration: timer,
-        };
-        setRecordings([...recordings, newRecording]);
-        setAudio(null);
-        setTimer(0);
-    }
-
     // A bit of a hack to get the blob from the object URL
     fetch(audio)
     .then(res => res.blob())
@@ -145,12 +130,12 @@ export default function VoiceMemosPage() {
   return (
     <main className="container mx-auto py-4 sm:py-6 lg:py-8">
       <PageHeader title="مذكراتي الصوتية" />
-      <Card className="mb-8" style={{ backgroundColor: '#F9FAFB' }}>
+      <Card className="mb-8">
         <CardHeader>
           <CardTitle>تسجيل جديد</CardTitle>
           <CardDescription>اضغط على الزر لبدء تسجيل ملاحظة صوتية جديدة.</CardDescription>
         </CardHeader>
-        <CardContent className={`flex flex-col items-center justify-center space-y-4 p-6 ${recordingStatus === 'recording' ? 'recording-active rounded-b-lg' : ''}`}>
+        <CardContent className={cn("flex flex-col items-center justify-center space-y-4 p-6 transition-colors", recordingStatus === 'recording' ? 'recording-active rounded-b-lg' : '')}>
           <div className="flex items-center space-x-4">
             {recordingStatus === 'inactive' ? (
               <Button onClick={startRecording} disabled={!permission} size="lg" className="rounded-full w-24 h-24 bg-red-500 hover:bg-red-600 text-white shadow-lg">
@@ -162,9 +147,9 @@ export default function VoiceMemosPage() {
               </Button>
             )}
           </div>
-          {recordingStatus === 'recording' && <div className="text-lg font-mono text-gray-700">{formatTime(timer)}</div>}
+          {recordingStatus === 'recording' && <div className="text-lg font-mono text-muted-foreground">{formatTime(timer)}</div>}
           {audio && (
-            <div className="w-full p-4 bg-gray-100 rounded-lg flex items-center justify-between">
+            <div className="w-full p-4 bg-muted/50 rounded-lg flex items-center justify-between">
               <audio src={audio} controls className="flex-grow" />
               <Button onClick={saveRecording} variant="ghost" size="icon">
                 <Save className="h-5 w-5 text-green-600" />
@@ -290,4 +275,3 @@ function RecordingItem({ recording, onDelete, onRename }: { recording: Recording
     </div>
   );
 }
-
