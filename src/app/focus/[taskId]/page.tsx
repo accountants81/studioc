@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect, useContext } from 'react';
@@ -10,8 +9,26 @@ import { Button } from '@/components/ui/button';
 import { Play, Pause, RotateCcw, X } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { useLocalStorage } from '@/hooks/use-local-storage';
 
 const FOCUS_DURATION = 25 * 60; // 25 minutes
+
+const translations = {
+  ar: {
+    taskNotFound: "لم يتم العثور على المهمة.",
+    descriptionPlaceholder: "استغل هذا الوقت للتركيز الكامل على مهمتك.",
+    exitFocus: "الخروج من وضع التركيز",
+    pause: "إيقاف مؤقت",
+    start: "ابدأ",
+  },
+  en: {
+    taskNotFound: "Task not found.",
+    descriptionPlaceholder: "Use this time to fully focus on your task.",
+    exitFocus: "Exit Focus Mode",
+    pause: "Pause",
+    start: "Start",
+  }
+};
 
 export default function FocusPage() {
   const params = useParams();
@@ -23,6 +40,9 @@ export default function FocusPage() {
   const [timeLeft, setTimeLeft] = useState(FOCUS_DURATION);
   const [isActive, setIsActive] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  
+  const [lang] = useLocalStorage<'ar' | 'en'>('app-lang', 'ar');
+  const t = translations[lang];
 
   useEffect(() => {
     setIsClient(true);
@@ -90,7 +110,7 @@ export default function FocusPage() {
   if (!task) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <p>لم يتم العثور على المهمة.</p>
+        <p>{t.taskNotFound}</p>
       </div>
     );
   }
@@ -106,7 +126,7 @@ export default function FocusPage() {
             onClick={() => router.push('/')}
         >
             <X className="h-6 w-6" />
-            <span className="sr-only">الخروج من وضع التركيز</span>
+            <span className="sr-only">{t.exitFocus}</span>
         </Button>
       <Card className={cn(
           "w-full max-w-lg mx-auto shadow-2xl transition-colors duration-500",
@@ -116,7 +136,7 @@ export default function FocusPage() {
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold">{task.title}</CardTitle>
           <CardDescription>
-            {task.description || "استغل هذا الوقت للتركيز الكامل على مهمتك."}
+            {task.description || t.descriptionPlaceholder}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center space-y-8 py-12">
@@ -154,8 +174,8 @@ export default function FocusPage() {
 
           <div className="flex items-center space-x-4">
             <Button onClick={toggleTimer} size="lg" className="w-32 h-16 rounded-full text-lg shadow-lg">
-              {isActive ? <Pause className="ml-2" /> : <Play className="ml-2" />}
-              <span>{isActive ? 'إيقاف مؤقت' : 'ابدأ'}</span>
+              {isActive ? <Pause className="mr-2" /> : <Play className="mr-2" />}
+              <span>{isActive ? t.pause : t.start}</span>
             </Button>
             <Button onClick={resetTimer} variant="outline" size="icon" className="w-16 h-16 rounded-full shadow-lg">
               <RotateCcw />

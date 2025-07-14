@@ -82,6 +82,7 @@ const suggestionFlow = ai.defineFlow(
   async (input) => {
     const { output } = await ai.generate({
         prompt: prompts[input.lang],
+        model: 'googleai/gemini-2.0-flash',
         input: input,
         output: { schema: SuggestionOutputSchema }
     });

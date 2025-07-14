@@ -18,12 +18,52 @@ type Note = {
   createdAt: string;
 };
 
+const translations = {
+  ar: {
+    pageTitle: "ملاحظاتي",
+    addNote: "إضافة ملاحظة",
+    newNoteTitle: "ملاحظة جديدة",
+    newNoteDesc: "اكتب عنوان ومحتوى ملاحظتك الجديدة.",
+    noteTitlePlaceholder: "عنوان الملاحظة",
+    noteContentPlaceholder: "اكتب أفكارك هنا...",
+    cancel: "إلغاء",
+    saveNote: "حفظ الملاحظة",
+    noNotes: "لا توجد ملاحظات بعد",
+    noNotesDesc: "ابدأ بإضافة ملاحظتك الأولى.",
+    save: "حفظ",
+    deleteConfirm: "هل أنت متأكد؟",
+    deleteDesc: "سيتم حذف هذه الملاحظة نهائيًا.",
+    delete: "حذف",
+    noContent: "لا يوجد محتوى.",
+  },
+  en: {
+    pageTitle: "My Notes",
+    addNote: "Add Note",
+    newNoteTitle: "New Note",
+    newNoteDesc: "Write the title and content for your new note.",
+    noteTitlePlaceholder: "Note Title",
+    noteContentPlaceholder: "Write your thoughts here...",
+    cancel: "Cancel",
+    saveNote: "Save Note",
+    noNotes: "No notes yet",
+    noNotesDesc: "Start by adding your first note.",
+    save: "Save",
+    deleteConfirm: "Are you sure?",
+    deleteDesc: "This note will be permanently deleted.",
+    delete: "Delete",
+    noContent: "No content.",
+  },
+};
+
 export default function NotesPage() {
   const [notes, setNotes] = useLocalStorage<Note[]>("timeflow-notes-v2", []);
   const [isCreating, setIsCreating] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState("");
   const [newNoteContent, setNewNoteContent] = useState("");
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+  
+  const [lang] = useLocalStorage<'ar' | 'en'>('app-lang', 'ar');
+  const t = translations[lang];
 
   const handleSaveNote = () => {
     if (!newNoteTitle.trim()) return;
@@ -65,11 +105,11 @@ export default function NotesPage() {
 
   return (
     <main className="container mx-auto py-4 sm:py-6 lg:py-8">
-      <PageHeader title="ملاحظاتي">
+      <PageHeader title={t.pageTitle}>
         {!isCreating && !editingNote && (
           <Button onClick={() => setIsCreating(true)}>
-            <PlusCircle className="ml-2 h-4 w-4" />
-            <span>إضافة ملاحظة</span>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            <span>{t.addNote}</span>
           </Button>
         )}
       </PageHeader>
@@ -77,18 +117,18 @@ export default function NotesPage() {
       {isCreating && (
         <Card className="mb-8 bg-card/80 border-primary/50">
           <CardHeader>
-            <CardTitle>ملاحظة جديدة</CardTitle>
-            <CardDescription>اكتب عنوان ومحتوى ملاحظتك الجديدة.</CardDescription>
+            <CardTitle>{t.newNoteTitle}</CardTitle>
+            <CardDescription>{t.newNoteDesc}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Input
-              placeholder="عنوان الملاحظة"
+              placeholder={t.noteTitlePlaceholder}
               value={newNoteTitle}
               onChange={(e) => setNewNoteTitle(e.target.value)}
               className="text-lg font-semibold"
             />
             <Textarea
-              placeholder="اكتب أفكارك هنا..."
+              placeholder={t.noteContentPlaceholder}
               value={newNoteContent}
               onChange={(e) => setNewNoteContent(e.target.value)}
               className="min-h-[200px]"
@@ -96,12 +136,12 @@ export default function NotesPage() {
           </CardContent>
           <CardFooter className="justify-end gap-2">
             <Button variant="ghost" onClick={cancelCreation}>
-              <X className="ml-2 h-4 w-4" />
-              إلغاء
+              <X className="mr-2 h-4 w-4" />
+              {t.cancel}
             </Button>
             <Button onClick={handleSaveNote}>
-              <Save className="ml-2 h-4 w-4" />
-              حفظ الملاحظة
+              <Save className="mr-2 h-4 w-4" />
+              {t.saveNote}
             </Button>
           </CardFooter>
         </Card>
@@ -112,8 +152,8 @@ export default function NotesPage() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
                 <Notebook className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold tracking-tight text-foreground">لا توجد ملاحظات بعد</h3>
-            <p className="text-muted-foreground mt-2">ابدأ بإضافة ملاحظتك الأولى.</p>
+            <h3 className="text-xl font-semibold tracking-tight text-foreground">{t.noNotes}</h3>
+            <p className="text-muted-foreground mt-2">{t.noNotesDesc}</p>
         </div>
       )}
 
@@ -137,10 +177,10 @@ export default function NotesPage() {
                 </CardContent>
                 <CardFooter className="justify-end gap-2">
                     <Button variant="ghost" size="sm" onClick={cancelEditing}>
-                        <X className="ml-1 h-4 w-4" /> إلغاء
+                        <X className="mr-1 h-4 w-4" /> {t.cancel}
                     </Button>
                     <Button size="sm" onClick={handleUpdateNote}>
-                        <Save className="ml-1 h-4 w-4" /> حفظ
+                        <Save className="mr-1 h-4 w-4" /> {t.save}
                     </Button>
                 </CardFooter>
             </Card>
@@ -149,13 +189,13 @@ export default function NotesPage() {
               <CardHeader>
                 <CardTitle>{note.title}</CardTitle>
                 <CardDescription>
-                  {new Date(note.createdAt).toLocaleDateString("ar-EG", {
+                  {new Date(note.createdAt).toLocaleDateString(lang === 'ar' ? 'ar-EG' : 'en-US', {
                     year: 'numeric', month: 'long', day: 'numeric'
                   })}
                 </CardDescription>
               </CardHeader>
               <CardContent className="flex-grow">
-                <p className="text-muted-foreground whitespace-pre-wrap">{note.content || "لا يوجد محتوى."}</p>
+                <p className="text-muted-foreground whitespace-pre-wrap">{note.content || t.noContent}</p>
               </CardContent>
               <CardFooter className="justify-end gap-1">
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEditing(note)}>
@@ -169,15 +209,15 @@ export default function NotesPage() {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
+                      <AlertDialogTitle>{t.deleteConfirm}</AlertDialogTitle>
                       <AlertDialogDescription>
-                        سيتم حذف هذه الملاحظة نهائيًا.
+                        {t.deleteDesc}
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel>إلغاء</AlertDialogCancel>
+                      <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
                       <AlertDialogAction onClick={() => handleDeleteNote(note.id)} className="bg-destructive hover:bg-destructive/90">
-                        حذف
+                        {t.delete}
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>

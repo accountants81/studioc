@@ -47,7 +47,7 @@ const translations = {
     addSectionDesc: "أدخل اسمًا للقسم الجديد (مثل: أهدافي، مشاريع، أفكار).",
     sectionNamePlaceholder: "اسم القسم",
     add: "إضافة",
-    changeLang: "تغيير اللغة"
+    changeLang: "Change Language"
   },
   en: {
     dashboard: "Dashboard",
@@ -65,7 +65,7 @@ const translations = {
     addSectionDesc: "Enter a name for the new section (e.g., My Goals, Projects, Ideas).",
     sectionNamePlaceholder: "Section Name",
     add: "Add",
-    changeLang: "Change Language"
+    changeLang: "تغيير اللغة"
   },
 };
 
@@ -115,8 +115,10 @@ export default function SidebarNav() {
   const toggleLanguage = () => {
     const newLang = lang === 'ar' ? 'en' : 'ar';
     setLang(newLang);
-    document.documentElement.lang = newLang;
-    document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+    if (typeof window !== 'undefined') {
+        document.documentElement.lang = newLang;
+        document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
+    }
   };
 
   return (
@@ -185,13 +187,13 @@ export default function SidebarNav() {
       </SidebarContent>
       <SidebarFooter className="gap-0">
          <Button variant="ghost" className="w-full justify-start" onClick={toggleLanguage}>
-            <Languages className="ml-2 h-4 w-4" />
+            <Languages className="mr-2 h-4 w-4" />
             <span>{t.changeLang}</span>
         </Button>
         <AlertDialog>
             <AlertDialogTrigger asChild>
                 <Button variant="ghost" className="w-full justify-start">
-                    <PlusCircle className="ml-2 h-4 w-4" />
+                    <PlusCircle className="mr-2 h-4 w-4" />
                     <span>{t.addSection}</span>
                 </Button>
             </AlertDialogTrigger>
@@ -209,7 +211,7 @@ export default function SidebarNav() {
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
-                        document.getElementById('add-section-confirm')?.click();
+                        (document.getElementById('add-section-confirm') as HTMLButtonElement)?.click();
                       }
                     }}
                 />

@@ -5,8 +5,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { format } from "date-fns";
-import { CalendarIcon, PlusCircle } from "lucide-react";
-import { ar } from 'date-fns/locale';
+import { CalendarIcon } from "lucide-react";
+import { ar, enUS } from 'date-fns/locale';
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,24 +39,103 @@ import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { categories, priorities, statuses, taskSchema, Task } from "@/lib/types";
+import { categories, priorities, statuses, getTaskSchema } from "@/lib/types";
+import type { Task } from "@/lib/types";
 import { TasksContext } from "@/contexts/task-provider";
 import { useToast } from "@/hooks/use-toast";
 import React from "react";
 import { Switch } from "./ui/switch";
 import { Label } from "./ui/label";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 type AddTaskDialogProps = {
   children: React.ReactNode;
   task?: Task;
 };
 
+const translations = {
+  ar: {
+    editTask: "تعديل المهمة",
+    addTask: "إضافة مهمة جديدة",
+    editDesc: "قم بتعديل تفاصيل مهمتك هنا.",
+    addDesc: "املأ التفاصيل أدناه لإنشاء مهمة جديدة.",
+    taskTitle: "عنوان المهمة",
+    taskTitlePlaceholder: "مثال: إنهاء التقرير الأسبوعي",
+    description: "الوصف (اختياري)",
+    descriptionPlaceholder: "أضف وصفًا موجزًا للمهمة",
+    dueDate: "تاريخ الاستحقاق",
+    pickDate: "اختر تاريخًا",
+    priority: "الأولوية",
+    priorityPlaceholder: "حدد الأولوية",
+    high: "عالية",
+    medium: "متوسطة",
+    low: "منخفضة",
+    category: "التصنيف",
+    categoryPlaceholder: "اختر تصنيفًا",
+    personal: "شخصي",
+    work: "عمل",
+    study: "دراسة",
+    other: "أخرى",
+    status: "الحالة",
+    statusPlaceholder: "اختر الحالة",
+    pending: "قيد الانتظار",
+    inProgress: "قيد التنفيذ",
+    completed: "مكتملة",
+    recurringTask: "مهمة متكررة",
+    isRoutine: "هل هذه المهمة روتينية؟",
+    cancel: "إلغاء",
+    saveChanges: "حفظ التغييرات",
+    addTaskBtn: "إضافة المهمة",
+    updateSuccess: "تم تحديث المهمة بنجاح",
+    addSuccess: "تمت إضافة المهمة بنجاح",
+  },
+  en: {
+    editTask: "Edit Task",
+    addTask: "Add New Task",
+    editDesc: "Modify the details of your task here.",
+    addDesc: "Fill in the details below to create a new task.",
+    taskTitle: "Task Title",
+    taskTitlePlaceholder: "e.g., Finish weekly report",
+    description: "Description (optional)",
+    descriptionPlaceholder: "Add a brief description of the task",
+    dueDate: "Due Date",
+    pickDate: "Pick a date",
+    priority: "Priority",
+    priorityPlaceholder: "Select priority",
+    high: "High",
+    medium: "Medium",
+    low: "Low",
+    category: "Category",
+    categoryPlaceholder: "Select a category",
+    personal: "Personal",
+    work: "Work",
+    study: "Study",
+    other: "Other",
+    status: "Status",
+    statusPlaceholder: "Select status",
+    pending: "Pending",
+    inProgress: "In Progress",
+    completed: "Completed",
+    recurringTask: "Recurring Task",
+    isRoutine: "Is this a routine task?",
+    cancel: "Cancel",
+    saveChanges: "Save Changes",
+    addTaskBtn: "Add Task",
+    updateSuccess: "Task updated successfully",
+    addSuccess: "Task added successfully",
+  },
+};
+
+
 export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
   const { addTask, updateTask } = useContext(TasksContext);
   const { toast } = useToast();
   const [open, setOpen] = React.useState(false);
+  const [lang] = useLocalStorage<'ar' | 'en'>('app-lang', 'ar');
   
   const isEditMode = task !== undefined;
+  const t = translations[lang];
+  const taskSchema = getTaskSchema(t.taskTitle);
 
   const form = useForm<z.infer<typeof taskSchema>>({
     resolver: zodResolver(taskSchema),
@@ -75,13 +154,11 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
   });
 
   React.useEffect(() => {
-    if (open && isEditMode) {
-      form.reset({
-        ...task,
-        dueDate: new Date(task.dueDate),
-      });
-    } else if (open && !isEditMode) {
-      form.reset({
+    if (open) {
+        const defaultValues = isEditMode ? {
+            ...task,
+            dueDate: new Date(task.dueDate),
+        } : {
           title: "",
           description: "",
           dueDate: new Date(),
@@ -89,7 +166,8 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
           status: "pending",
           category: "personal",
           isRecurring: false,
-      });
+        };
+        form.reset(defaultValues);
     }
   }, [open, task, isEditMode, form]);
 
@@ -101,10 +179,10 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
 
     if (isEditMode) {
         updateTask(task.id, taskData);
-        toast({ title: "تم تحديث المهمة بنجاح" });
+        toast({ title: t.updateSuccess });
     } else {
         addTask(taskData);
-        toast({ title: "تمت إضافة المهمة بنجاح" });
+        toast({ title: t.addSuccess });
     }
     setOpen(false);
   }
@@ -114,9 +192,9 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? 'تعديل المهمة' : 'إضافة مهمة جديدة'}</DialogTitle>
+          <DialogTitle>{isEditMode ? t.editTask : t.addTask}</DialogTitle>
           <DialogDescription>
-            {isEditMode ? 'قم بتعديل تفاصيل مهمتك هنا.' : 'املأ التفاصيل أدناه لإنشاء مهمة جديدة.'}
+            {isEditMode ? t.editDesc : t.addDesc}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -126,9 +204,9 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
               name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>عنوان المهمة</FormLabel>
+                  <FormLabel>{t.taskTitle}</FormLabel>
                   <FormControl>
-                    <Input placeholder="مثال: إنهاء التقرير الأسبوعي" {...field} />
+                    <Input placeholder={t.taskTitlePlaceholder} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -139,9 +217,9 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>الوصف (اختياري)</FormLabel>
+                  <FormLabel>{t.description}</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="أضف وصفًا موجزًا للمهمة" {...field} />
+                    <Textarea placeholder={t.descriptionPlaceholder} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -152,22 +230,22 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
               name="dueDate"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>تاريخ الاستحقاق</FormLabel>
+                  <FormLabel>{t.dueDate}</FormLabel>
                   <Popover>
                     <PopoverTrigger asChild>
                       <FormControl>
                         <Button
                           variant={"outline"}
                           className={cn(
-                            "w-full justify-start text-right font-normal",
+                            "w-full justify-start text-left font-normal",
                             !field.value && "text-muted-foreground"
                           )}
                         >
-                          <CalendarIcon className="ml-2 h-4 w-4" />
+                          <CalendarIcon className="mr-2 h-4 w-4" />
                           {field.value ? (
-                            format(field.value, "PPP", { locale: ar })
+                            format(field.value, "PPP", { locale: lang === 'ar' ? ar : enUS })
                           ) : (
-                            <span>اختر تاريخًا</span>
+                            <span>{t.pickDate}</span>
                           )}
                         </Button>
                       </FormControl>
@@ -178,7 +256,7 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
                         selected={field.value}
                         onSelect={field.onChange}
                         initialFocus
-                        locale={ar}
+                        locale={lang === 'ar' ? ar : enUS}
                       />
                     </PopoverContent>
                   </Popover>
@@ -192,17 +270,17 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
                 name="priority"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>الأولوية</FormLabel>
+                    <FormLabel>{t.priority}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="حدد الأولوية" />
+                          <SelectValue placeholder={t.priorityPlaceholder} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {priorities.map((p) => (
                           <SelectItem key={p} value={p}>
-                            {p === 'high' ? 'عالية' : p === 'medium' ? 'متوسطة' : 'منخفضة'}
+                            {t[p]}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -216,17 +294,17 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>التصنيف</FormLabel>
+                    <FormLabel>{t.category}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="اختر تصنيفًا" />
+                          <SelectValue placeholder={t.categoryPlaceholder} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {categories.map((c) => (
                           <SelectItem key={c} value={c}>
-                            {c === 'personal' ? 'شخصي' : c === 'work' ? 'عمل' : c === 'study' ? 'دراسة' : 'أخرى'}
+                            {t[c]}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -242,19 +320,17 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
                     name="status"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>الحالة</FormLabel>
+                        <FormLabel>{t.status}</FormLabel>
                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
                             <SelectTrigger>
-                              <SelectValue placeholder="اختر الحالة" />
+                              <SelectValue placeholder={t.statusPlaceholder} />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {statuses.map((s) => (
-                              <SelectItem key={s} value={s}>
-                                {s === 'pending' ? 'قيد الانتظار' : s === 'in-progress' ? 'قيد التنفيذ' : 'مكتملة'}
-                              </SelectItem>
-                            ))}
+                             <SelectItem value="pending">{t.pending}</SelectItem>
+                             <SelectItem value="in-progress">{t.inProgress}</SelectItem>
+                             <SelectItem value="completed">{t.completed}</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
@@ -266,15 +342,15 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
                     name="isRecurring"
                     render={({ field }) => (
                         <FormItem className="flex flex-col pt-2">
-                        <FormLabel className="mb-2.5">مهمة متكررة</FormLabel>
+                        <FormLabel className="mb-2.5">{t.recurringTask}</FormLabel>
                         <FormControl>
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2 rtl:space-x-reverse">
                             <Switch
                               id="isRecurring-switch"
                               checked={field.value}
                               onCheckedChange={field.onChange}
                             />
-                            <Label htmlFor="isRecurring-switch">هل هذه المهمة روتينية؟</Label>
+                            <Label htmlFor="isRecurring-switch">{t.isRoutine}</Label>
                           </div>
                         </FormControl>
                       </FormItem>
@@ -283,8 +359,8 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
             </div>
 
             <DialogFooter>
-              <Button type="button" variant="ghost" onClick={() => setOpen(false)}>إلغاء</Button>
-              <Button type="submit">{isEditMode ? 'حفظ التغييرات' : 'إضافة المهمة'}</Button>
+              <Button type="button" variant="ghost" onClick={() => setOpen(false)}>{t.cancel}</Button>
+              <Button type="submit">{isEditMode ? t.saveChanges : t.addTaskBtn}</Button>
             </DialogFooter>
           </form>
         </Form>

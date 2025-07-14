@@ -62,7 +62,7 @@ function AssistantCard() {
     const { tasks } = useContext(TasksContext);
     const [suggestion, setSuggestion] = useState<string>("");
     const [isLoading, setIsLoading] = useState(true);
-    const [lang] = useLocalStorage('app-lang', 'ar');
+    const [lang] = useLocalStorage<'ar' | 'en'>('app-lang', 'ar');
     const t = translations[lang];
 
     useEffect(() => {
@@ -107,7 +107,7 @@ function AssistantCard() {
 export default function DailyTasksPage() {
   const { tasks } = useContext(TasksContext);
   const [searchQuery, setSearchQuery] = useState("");
-  const [lang] = useLocalStorage('app-lang', 'ar');
+  const [lang] = useLocalStorage<'ar' | 'en'>('app-lang', 'ar');
   const t = translations[lang];
 
   const filteredTasks = useMemo(() => {
@@ -130,7 +130,7 @@ export default function DailyTasksPage() {
       <PageHeader title={t.dashboard}>
         <AddTaskDialog>
           <Button>
-            <PlusCircle className="ml-2 h-4 w-4" />
+            <PlusCircle className="mr-2 h-4 w-4" />
             <span>{t.addTask}</span>
           </Button>
         </AddTaskDialog>
@@ -190,12 +190,12 @@ export default function DailyTasksPage() {
       </div>
 
        <div className="mb-8 relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        <Search className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input
           placeholder={t.searchPlaceholder}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10 text-base"
+          className="pl-10 rtl:pr-10 text-base"
         />
       </div>
 
