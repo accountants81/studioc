@@ -36,7 +36,7 @@ const prompt = ai.definePrompt({
 
     Audio: {{media url=audioUri}}
   `,
-  model: 'googleai/gemini-2.0-flash',
+  model: 'googleai/gemini-1.5-flash',
   config: {
     temperature: 0.1,
   },
