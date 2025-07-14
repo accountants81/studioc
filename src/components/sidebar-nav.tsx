@@ -1,3 +1,4 @@
+
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
@@ -27,7 +28,9 @@ import {
   Trophy,
   Target,
   LineChart,
-  Bot
+  Bot,
+  Cloud,
+  Lightbulb
 } from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
@@ -47,6 +50,8 @@ const translations = {
     aiAssistant: "المساعد الذكي",
     challenges: "التحديات",
     goals: "الأهداف",
+    dreams: "أحلامي",
+    ideas: "أفكاري المجنونة",
     vault: "الخزنة الخاصة",
     addSection: "إضافة قسم جديد",
     deleteSectionTitle: 'هل أنت متأكد من حذف قسم "{sectionName}"؟',
@@ -58,7 +63,10 @@ const translations = {
     sectionNamePlaceholder: "اسم القسم",
     add: "إضافة",
     changeLang: "Change Language",
-    customSections: "أقسامي الخاصة"
+    customSections: "أقسامي الخاصة",
+    tasks: "المهام",
+    personal: "شخصي",
+    growth: "النمو والإلهام"
   },
   en: {
     dashboard: "Dashboard",
@@ -71,6 +79,8 @@ const translations = {
     aiAssistant: "AI Assistant",
     challenges: "Challenges",
     goals: "Goals",
+    dreams: "My Dreams",
+    ideas: "Crazy Ideas",
     vault: "Private Vault",
     addSection: "Add New Section",
     deleteSectionTitle: 'Are you sure you want to delete "{sectionName}"?',
@@ -82,7 +92,10 @@ const translations = {
     sectionNamePlaceholder: "Section Name",
     add: "Add",
     changeLang: "تغيير اللغة",
-    customSections: "My Sections"
+    customSections: "My Sections",
+    tasks: "Tasks",
+    personal: "Personal",
+    growth: "Growth & Inspiration"
   },
 };
 
@@ -115,12 +128,14 @@ export default function SidebarNav() {
   const personalNavItems = [
       { href: "/notes", label: t.notes, icon: Notebook },
       { href: "/voice-memos", label: t.voiceMemos, icon: Mic },
+      { href: "/vault", label: t.vault, icon: Shield },
   ];
   
-  const futureNavItems = [
+  const growthNavItems = [
       { href: "/challenges", label: t.challenges, icon: Trophy },
       { href: "/goals", label: t.goals, icon: Target },
-      { href: "/vault", label: t.vault, icon: Shield },
+      { href: "/dreams", label: t.dreams, icon: Cloud },
+      { href: "/ideas", label: t.ideas, icon: Lightbulb },
   ];
 
   const handleLinkClick = () => {
@@ -135,7 +150,6 @@ export default function SidebarNav() {
       };
       setCustomSections(prevSections => [...prevSections, newSection]);
       
-      // Navigate to the new section after state update
       router.push(`/custom/${newSection.id}`);
       handleLinkClick();
       setNewSectionName("");
@@ -145,7 +159,6 @@ export default function SidebarNav() {
   const handleDeleteSection = (id: string) => {
     setCustomSections(customSections.filter(section => section.id !== id));
     localStorage.removeItem(`custom-section-notes-${id}`);
-    // If the user is on the page of the deleted section, navigate them away
     if (pathname === `/custom/${id}`) {
         router.push('/');
     }
@@ -188,10 +201,12 @@ export default function SidebarNav() {
       <SidebarContent>
         <SidebarMenu>
           {renderNavSection(mainNavItems)}
-          <SidebarMenuItem className="px-2 pt-2 text-xs font-semibold text-muted-foreground tracking-wider">{t.ongoing}</SidebarMenuItem>
+          <SidebarMenuItem className="px-2 pt-2 text-xs font-semibold text-muted-foreground tracking-wider">{t.tasks}</SidebarMenuItem>
           {renderNavSection(taskNavItems)}
-          <SidebarMenuItem className="px-2 pt-2 text-xs font-semibold text-muted-foreground tracking-wider">{t.notes}</SidebarMenuItem>
+          <SidebarMenuItem className="px-2 pt-2 text-xs font-semibold text-muted-foreground tracking-wider">{t.personal}</SidebarMenuItem>
           {renderNavSection(personalNavItems)}
+          <SidebarMenuItem className="px-2 pt-2 text-xs font-semibold text-muted-foreground tracking-wider">{t.growth}</SidebarMenuItem>
+          {renderNavSection(growthNavItems)}
 
           {customSections.length > 0 && (
              <SidebarMenuItem className="px-2 pt-2 text-xs font-semibold text-muted-foreground tracking-wider">{t.customSections}</SidebarMenuItem>
@@ -234,8 +249,6 @@ export default function SidebarNav() {
                 </AlertDialog>
             </SidebarMenuItem>
           ))}
-            <SidebarMenuItem className="px-2 pt-2 text-xs font-semibold text-muted-foreground tracking-wider">Future Features</SidebarMenuItem>
-            {renderNavSection(futureNavItems)}
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="gap-0">
@@ -278,3 +291,4 @@ export default function SidebarNav() {
     </>
   );
 }
+
