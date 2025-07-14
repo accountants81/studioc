@@ -30,7 +30,8 @@ import {
   LineChart,
   Bot,
   Cloud,
-  Lightbulb
+  Lightbulb,
+  Camera
 } from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
@@ -53,6 +54,7 @@ const translations = {
     dreams: "أحلامي",
     ideas: "أفكاري المجنونة",
     vault: "الخزنة الخاصة",
+    memories: "الذكريات",
     addSection: "إضافة قسم جديد",
     deleteSectionTitle: 'هل أنت متأكد من حذف قسم "{sectionName}"؟',
     deleteSectionDesc: "سيتم حذف هذا القسم وجميع الملاحظات الموجودة بداخله نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
@@ -82,6 +84,7 @@ const translations = {
     dreams: "My Dreams",
     ideas: "Crazy Ideas",
     vault: "Private Vault",
+    memories: "Memories",
     addSection: "Add New Section",
     deleteSectionTitle: 'Are you sure you want to delete "{sectionName}"?',
     deleteSectionDesc: "This section and all its notes will be permanently deleted. This action cannot be undone.",
@@ -128,6 +131,7 @@ export default function SidebarNav() {
   const personalNavItems = [
       { href: "/notes", label: t.notes, icon: Notebook },
       { href: "/voice-memos", label: t.voiceMemos, icon: Mic },
+      { href: "/memories", label: t.memories, icon: Camera },
       { href: "/vault", label: t.vault, icon: Shield },
   ];
   
@@ -149,7 +153,6 @@ export default function SidebarNav() {
         name: newSectionName.trim(),
       };
       setCustomSections(prevSections => [...prevSections, newSection]);
-      
       router.push(`/custom/${newSection.id}`);
       handleLinkClick();
       setNewSectionName("");
@@ -291,5 +294,6 @@ export default function SidebarNav() {
     </>
   );
 }
+
 
 

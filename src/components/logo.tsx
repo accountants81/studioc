@@ -1,6 +1,10 @@
 import { cn } from "@/lib/utils";
+import { useLocalStorage } from "@/hooks/use-local-storage";
 
 export function TimeFlowLogo({ className }: { className?: string }) {
+  const [lang] = useLocalStorage<'ar' | 'en'>('app-lang', 'ar');
+  const appName = lang === 'ar' ? "MomentumFlow" : "MomentumFlow";
+
   return (
     <div className={cn("flex items-center gap-2", className)}>
         <svg
@@ -26,7 +30,7 @@ export function TimeFlowLogo({ className }: { className?: string }) {
                 strokeLinejoin="round"
             />
             </svg>
-        <span className="text-xl font-semibold text-sidebar-foreground">MomentumFlow</span>
+        <span className="text-xl font-semibold text-sidebar-foreground">{appName}</span>
     </div>
 
   );
