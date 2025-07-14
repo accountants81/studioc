@@ -78,7 +78,7 @@ export function TaskItem({ task }: TaskItemProps) {
   return (
     <div
       className={cn(
-        "flex items-start gap-4 rounded-lg border bg-card p-4 transition-all hover:shadow-md",
+        "flex items-start gap-4 rounded-lg border bg-card p-4 transition-all hover:shadow-lg hover:border-primary/50",
         isCompleted && "border-green-500/40 bg-green-500/5",
         isOverdue && "border-destructive/40 bg-destructive/5"
       )}

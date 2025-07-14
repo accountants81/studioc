@@ -1,22 +1,32 @@
+"use client";
+
+import React, { useMemo, useContext } from "react";
 import { PageHeader } from "@/components/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Construction } from "lucide-react";
+import { AddTaskDialog } from "@/components/add-task-dialog";
+import { TaskList } from "@/components/task-list";
+import { Task } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
+import { TasksContext } from "@/contexts/task-provider";
 
 export default function OngoingPage() {
+  const { tasks } = useContext(TasksContext);
+
+  const ongoingTasks = useMemo(() => {
+    return tasks.filter(task => task.isRecurring);
+  }, [tasks]);
+
   return (
     <main className="container mx-auto py-4 sm:py-6 lg:py-8">
-      <PageHeader title="المهام المستمرة" />
-      <Card className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted bg-card/20 p-12 text-center h-96">
-        <CardHeader>
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4 mx-auto">
-            <Construction className="h-8 w-8 text-primary" />
-          </div>
-          <CardTitle>قيد الإنشاء</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">هذه الصفحة قيد التطوير حاليًا. عد قريبًا!</p>
-        </CardContent>
-      </Card>
+      <PageHeader title="المهام المستمرة">
+         <AddTaskDialog>
+            <Button>
+                <PlusCircle className="ml-2 h-4 w-4" />
+                <span>إضافة مهمة جديدة</span>
+            </Button>
+        </AddTaskDialog>
+      </PageHeader>
+      <TaskList tasks={ongoingTasks} emptyMessage="لا توجد مهام مستمرة." />
     </main>
   );
 }

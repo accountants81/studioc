@@ -8,6 +8,7 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { TimeFlowLogo } from "./logo";
 import {
@@ -30,6 +31,11 @@ const navItems = [
 
 export default function SidebarNav() {
   const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
+
+  const handleLinkClick = () => {
+    setOpenMobile(false);
+  };
 
   return (
     <>
@@ -40,7 +46,7 @@ export default function SidebarNav() {
         <SidebarMenu>
           {navItems.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <Link href={item.href} passHref>
+              <Link href={item.href} onClick={handleLinkClick} legacyBehavior={false}>
                 <SidebarMenuButton
                   as="a"
                   isActive={pathname === item.href}

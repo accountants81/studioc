@@ -4,7 +4,7 @@ import React, { useState, useMemo, useContext } from "react";
 import { isToday, isFuture, isPast } from "date-fns";
 import { PageHeader } from "@/components/page-header";
 import { AddTaskDialog } from "@/components/add-task-dialog";
-import { TaskItem } from "@/components/task-item";
+import { TaskList } from "@/components/task-list";
 import { Task } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Calendar as CalendarIcon } from "lucide-react";
@@ -21,35 +21,6 @@ export default function DailyTasksPage() {
   const overdueTasks = useMemo(() => tasks.filter(task => isPast(new Date(task.dueDate)) && !isToday(new Date(task.dueDate)) && task.status !== 'completed'), [tasks]);
   const completedTasks = useMemo(() => tasks.filter(task => task.status === 'completed'), [tasks]);
 
-  const TaskList = ({ tasks, emptyMessage }: { tasks: Task[], emptyMessage: string }) => {
-    if (tasks.length === 0) {
-      return (
-        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted bg-card/20 p-12 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
-            <CalendarIcon className="h-8 w-8 text-primary" />
-          </div>
-          <h3 className="text-xl font-semibold tracking-tight text-foreground">{emptyMessage}</h3>
-          <p className="text-muted-foreground mt-2">أضف مهمة جديدة للبدء.</p>
-          <div className="mt-6">
-            <AddTaskDialog>
-              <Button>
-                <PlusCircle className="ml-2 h-4 w-4" />
-                <span>إضافة مهمة جديدة</span>
-              </Button>
-            </AddTaskDialog>
-          </div>
-        </div>
-      );
-    }
-    return (
-      <div className="space-y-3">
-        {tasks.map((task) => (
-          <TaskItem key={task.id} task={task} />
-        ))}
-      </div>
-    );
-  };
-
   return (
     <main className="container mx-auto py-4 sm:py-6 lg:py-8">
       <PageHeader title="لوحة التحكم">
@@ -62,7 +33,7 @@ export default function DailyTasksPage() {
       </PageHeader>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <Card>
+        <Card className="shadow-md hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">مهام قيد التنفيذ</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -71,7 +42,7 @@ export default function DailyTasksPage() {
             <div className="text-2xl font-bold">{tasks.filter(t => t.status === 'in-progress').length}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-md hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">مهام مكتملة</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
@@ -80,7 +51,7 @@ export default function DailyTasksPage() {
             <div className="text-2xl font-bold">{completedTasks.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-md hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">مهام متأخرة</CardTitle>
             <AlertTriangle className="h-4 w-4 text-destructive" />
@@ -89,7 +60,7 @@ export default function DailyTasksPage() {
             <div className="text-2xl font-bold">{overdueTasks.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-md hover:shadow-lg transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">إجمالي المهام</CardTitle>
             <CalendarIcon className="h-4 w-4 text-muted-foreground" />
