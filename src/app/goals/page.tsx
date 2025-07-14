@@ -184,7 +184,7 @@ export default function GoalsPage() {
                 </CardFooter>
             </Card>
           ) : (
-            <Card key={note.id} className="flex flex-col">
+            <Card key={note.id} className="flex flex-col transition-shadow hover:shadow-lg">
               <CardHeader>
                 <CardTitle>{note.title}</CardTitle>
                 <CardDescription>

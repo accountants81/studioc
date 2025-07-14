@@ -100,7 +100,7 @@ export default function ChallengesPage() {
         {challenges.map((challenge) => {
           const Icon = challenge.icon;
           return (
-          <Card key={challenge.id} className={cn("transition-all", challenge.isCompleted ? "bg-primary/10 border-primary/20" : "")}>
+          <Card key={challenge.id} className={cn("transition-all hover:shadow-lg hover:-translate-y-0.5", challenge.isCompleted ? "bg-primary/10 border-primary/20" : "")}>
             <CardHeader className="flex-row items-center gap-4 space-y-0">
                <div className={cn("w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0", challenge.isCompleted ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary')}>
                    <Icon className="w-6 h-6" />
