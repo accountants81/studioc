@@ -1,6 +1,6 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   SidebarHeader,
@@ -93,6 +93,7 @@ type CustomSection = {
 
 export default function SidebarNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const { setOpenMobile } = useSidebar();
   const [customSections, setCustomSections] = useLocalStorage<CustomSection[]>("timeflow-custom-sections", []);
   const [newSectionName, setNewSectionName] = React.useState("");
@@ -132,7 +133,13 @@ export default function SidebarNav() {
         id: crypto.randomUUID(),
         name: newSectionName.trim(),
       };
-      setCustomSections([...customSections, newSection]);
+      setCustomSections(prevSections => {
+        const updatedSections = [...prevSections, newSection];
+        // Navigate to the new section immediately after state update
+        router.push(`/custom/${newSection.id}`);
+        handleLinkClick();
+        return updatedSections;
+      });
       setNewSectionName("");
     }
   };
@@ -140,6 +147,10 @@ export default function SidebarNav() {
   const handleDeleteSection = (id: string) => {
     setCustomSections(customSections.filter(section => section.id !== id));
     localStorage.removeItem(`custom-section-notes-${id}`);
+    // If the user is on the page of the deleted section, navigate them away
+    if (pathname === `/custom/${id}`) {
+        router.push('/');
+    }
   }
 
   const toggleLanguage = () => {

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useState, useEffect, useCallback } from "react";
+import { useParams, useRouter } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -63,36 +63,27 @@ const translations = {
 
 export default function CustomSectionPage() {
   const params = useParams();
+  const router = useRouter();
   const sectionId = params.id as string;
   
-  // The key for localStorage is now dynamically generated based on the sectionId.
-  // This is a placeholder for the setNotes function, as we'll get the real one from the hook.
-  const [notes, setNotes] = useLocalStorage<Note[]>(`custom-section-notes-${sectionId}`, []);
   const [customSections] = useLocalStorage<CustomSection[]>("timeflow-custom-sections", []);
   
   const [sectionName, setSectionName] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newNoteTitle, setNewNoteTitle] = useState("");
-  const [newNoteContent, setNewNoteContent] = useState("");
-  const [editingNote, setEditingNote] = useState<Note | null>(null);
-  
+
   const [lang] = useLocalStorage<'ar' | 'en'>('app-lang', 'ar');
   const t = translations[lang];
 
-  // We use a key for the main content to force a re-mount when the sectionId changes.
-  // This ensures that the useLocalStorage hook is re-initialized with the new key.
-  const [componentKey, setComponentKey] = useState(sectionId);
-
   useEffect(() => {
-    setIsLoading(true);
     const currentSection = customSections.find(s => s.id === sectionId);
     if (currentSection) {
       setSectionName(currentSection.name);
+      setIsLoading(false);
+    } else {
+        // If the section doesn't exist, maybe it's still being created.
+        // A small delay could help, but redirecting might be better if it consistently fails.
+        // For now, just show loading. If it persists, the issue is elsewhere (e.g., sidebar link logic)
     }
-    // Change the key to force re-mounting of children components that depend on sectionId
-    setComponentKey(sectionId); 
-    setIsLoading(false);
   }, [sectionId, customSections]);
 
 
@@ -115,8 +106,9 @@ export default function CustomSectionPage() {
   return (
     <main className="container mx-auto py-4 sm:py-6 lg:py-8">
       <PageHeader title={sectionName || t.pageTitle}>
-        <CustomSectionContent key={componentKey} sectionId={sectionId} />
+        {/* Add button is moved inside the content component */}
       </PageHeader>
+      <CustomSectionContent key={sectionId} sectionId={sectionId} />
     </main>
   );
 }
@@ -172,7 +164,7 @@ function CustomSectionContent({ sectionId }: { sectionId: string }) {
   return (
     <>
         <div className="w-full">
-            <div className="flex justify-end mb-8">
+            <div className="flex justify-end mb-8 -mt-16">
                  {!isCreating && !editingNote && (
                     <Button onClick={() => setIsCreating(true)}>
                         <PlusCircle className="mr-2 h-4 w-4" />
