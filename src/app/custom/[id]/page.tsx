@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/page-header";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,7 +10,7 @@ import { PlusCircle, Trash2, Edit, Save, X, Notebook } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type Note = {
   id: string;
@@ -18,12 +19,40 @@ type Note = {
   createdAt: string;
 };
 
-export default function NotesPage() {
-  const [notes, setNotes] = useLocalStorage<Note[]>("timeflow-notes-v2", []);
+type CustomSection = {
+  id: string;
+  name: string;
+};
+
+export default function CustomSectionPage() {
+  const params = useParams();
+  const sectionId = params.id as string;
+  
+  const [notes, setNotes] = useLocalStorage<Note[]>(`custom-section-notes-${sectionId}`, []);
+  const [customSections] = useLocalStorage<CustomSection[]>("timeflow-custom-sections", []);
+  const [sectionName, setSectionName] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+
   const [isCreating, setIsCreating] = useState(false);
   const [newNoteTitle, setNewNoteTitle] = useState("");
   const [newNoteContent, setNewNoteContent] = useState("");
   const [editingNote, setEditingNote] = useState<Note | null>(null);
+
+  useEffect(() => {
+    if (sectionId && customSections.length > 0) {
+      const currentSection = customSections.find(s => s.id === sectionId);
+      if (currentSection) {
+        setSectionName(currentSection.name);
+      }
+      setIsLoading(false);
+    }
+  }, [sectionId, customSections]);
+  
+  useEffect(() => {
+    // Reset state when section changes to avoid showing old data briefly
+    setIsLoading(true);
+    setNotes([]); 
+  }, [sectionId, setNotes]);
 
   const handleSaveNote = () => {
     if (!newNoteTitle.trim()) return;
@@ -63,13 +92,29 @@ export default function NotesPage() {
     setNewNoteContent("");
   };
 
+  if (isLoading) {
+      return (
+        <main className="container mx-auto py-4 sm:py-6 lg:py-8">
+            <header className="flex items-center justify-between gap-4 mb-8">
+                <Skeleton className="h-9 w-48" />
+                <Skeleton className="h-10 w-36" />
+            </header>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <Skeleton className="h-60 w-full" />
+                <Skeleton className="h-60 w-full" />
+                <Skeleton className="h-60 w-full" />
+            </div>
+        </main>
+      )
+  }
+
   return (
     <main className="container mx-auto py-4 sm:py-6 lg:py-8">
-      <PageHeader title="ملاحظاتي">
+      <PageHeader title={sectionName || "قسم مخصص"}>
         {!isCreating && !editingNote && (
           <Button onClick={() => setIsCreating(true)}>
             <PlusCircle className="ml-2 h-4 w-4" />
-            <span>إضافة ملاحظة</span>
+            <span>إضافة تدوينة</span>
           </Button>
         )}
       </PageHeader>
@@ -77,12 +122,12 @@ export default function NotesPage() {
       {isCreating && (
         <Card className="mb-8 bg-card/80 border-primary/50">
           <CardHeader>
-            <CardTitle>ملاحظة جديدة</CardTitle>
-            <CardDescription>اكتب عنوان ومحتوى ملاحظتك الجديدة.</CardDescription>
+            <CardTitle>تدوينة جديدة</CardTitle>
+            <CardDescription>اكتب عنوان ومحتوى التدوينة الجديدة.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <Input
-              placeholder="عنوان الملاحظة"
+              placeholder="عنوان التدوينة"
               value={newNoteTitle}
               onChange={(e) => setNewNoteTitle(e.target.value)}
               className="text-lg font-semibold"
@@ -101,7 +146,7 @@ export default function NotesPage() {
             </Button>
             <Button onClick={handleSaveNote}>
               <Save className="ml-2 h-4 w-4" />
-              حفظ الملاحظة
+              حفظ التدوينة
             </Button>
           </CardFooter>
         </Card>
@@ -112,8 +157,8 @@ export default function NotesPage() {
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
                 <Notebook className="h-8 w-8 text-primary" />
             </div>
-            <h3 className="text-xl font-semibold tracking-tight text-foreground">لا توجد ملاحظات بعد</h3>
-            <p className="text-muted-foreground mt-2">ابدأ بإضافة ملاحظتك الأولى.</p>
+            <h3 className="text-xl font-semibold tracking-tight text-foreground">لا يوجد شيء هنا بعد</h3>
+            <p className="text-muted-foreground mt-2">ابدأ بإضافة تدوينتك الأولى في هذا القسم.</p>
         </div>
       )}
 
@@ -171,7 +216,7 @@ export default function NotesPage() {
                     <AlertDialogHeader>
                       <AlertDialogTitle>هل أنت متأكد؟</AlertDialogTitle>
                       <AlertDialogDescription>
-                        سيتم حذف هذه الملاحظة نهائيًا.
+                        سيتم حذف هذه التدوينة نهائيًا.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
