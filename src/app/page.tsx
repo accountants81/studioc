@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { AddTaskDialog } from "@/components/add-task-dialog";
 import { TaskList } from "@/components/task-list";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Calendar as CalendarIcon, CheckCircle, Clock, AlertTriangle, Sparkles, Search } from "lucide-react";
+import { PlusCircle, Calendar as CalendarIcon, CheckCircle, Clock, AlertTriangle, Sparkles, Search, Flame } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { TasksContext } from "@/contexts/task-provider";
@@ -14,6 +14,7 @@ import { getSuggestion } from "@/ai/flows/suggestion-flow";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Input } from "@/components/ui/input";
+import { useStreak } from "@/hooks/use-streak";
 
 const translations = {
   ar: {
@@ -35,6 +36,9 @@ const translations = {
     emptyUpcoming: "لا توجد مهام قادمة. خطط لأسبوعك الآن!",
     emptyOverdue: "لا توجد مهام متأخرة. عمل رائع!",
     searchPlaceholder: "ابحث عن مهمة...",
+    streakTitle: "أيام الالتزام",
+    streakDays: "أيام متتالية",
+    streakSub: "أكمل مهمة واحدة على الأقل يوميًا للحفاظ على التزامك.",
   },
   en: {
     dashboard: "Dashboard",
@@ -55,6 +59,9 @@ const translations = {
     emptyUpcoming: "No upcoming tasks. Plan your week now!",
     emptyOverdue: "No overdue tasks. Great job!",
     searchPlaceholder: "Search for a task...",
+    streakTitle: "Current Streak",
+    streakDays: "consecutive days",
+    streakSub: "Complete at least one task every day to maintain your streak.",
   },
 };
 
@@ -101,6 +108,27 @@ function AssistantCard() {
           </CardContent>
         </Card>
     )
+}
+
+function StreakCard() {
+  const { streak } = useStreak();
+  const [lang] = useLocalStorage<'ar' | 'en'>('app-lang', 'ar');
+  const t = translations[lang];
+
+  return (
+    <Card className="shadow-sm hover:shadow-md transition-shadow">
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{t.streakTitle}</CardTitle>
+        <Flame className="h-4 w-4 text-orange-500" />
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">
+          {streak} {t.streakDays}
+        </div>
+        <p className="text-xs text-muted-foreground">{t.streakSub}</p>
+      </CardContent>
+    </Card>
+  );
 }
 
 
@@ -173,6 +201,11 @@ export default function DailyTasksPage() {
             </p>
           </CardContent>
         </Card>
+        <StreakCard />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2 mb-8">
+        <AssistantCard />
         <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t.totalTasks}</CardTitle>
@@ -183,10 +216,6 @@ export default function DailyTasksPage() {
             <p className="text-xs text-muted-foreground">{t.registeredTasks.replace('{count}', tasks.length.toString())}</p>
           </CardContent>
         </Card>
-      </div>
-
-      <div className="mb-8">
-        <AssistantCard />
       </div>
 
        <div className="mb-8 relative">

@@ -10,6 +10,7 @@ type TasksContextType = {
   updateTask: (id: string, updates: Partial<Task>) => void;
   deleteTask: (id: string) => void;
   isLoading: boolean;
+  notifyTaskCompleted: () => void;
 };
 
 export const TasksContext = createContext<TasksContextType>({
@@ -18,10 +19,17 @@ export const TasksContext = createContext<TasksContextType>({
   updateTask: () => {},
   deleteTask: () => {},
   isLoading: true,
+  notifyTaskCompleted: () => {},
 });
+
+type Streak = {
+  count: number;
+  lastCompletedDate: string;
+};
 
 export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
   const [tasks, setTasks] = useLocalStorage<Task[]>('timeflow-tasks', []);
+  const [streak, setStreak] = useLocalStorage<Streak>('timeflow-streak', { count: 0, lastCompletedDate: '' });
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -42,13 +50,30 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
         task.id === id ? { ...task, ...updates } : task
       ).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
     );
+     if (updates.status === 'completed') {
+      notifyTaskCompleted();
+    }
   };
 
   const deleteTask = (id: string) => {
     setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
   };
 
-  const value = { tasks, addTask, updateTask, deleteTask, isLoading };
+  const notifyTaskCompleted = () => {
+    const today = new Date().toISOString().split('T')[0];
+    if (streak.lastCompletedDate !== today) {
+        const yesterday = new Date(Date.now() - 864e5).toISOString().split('T')[0];
+        if (streak.lastCompletedDate === yesterday) {
+            // Increment streak
+            setStreak({ count: streak.count + 1, lastCompletedDate: today });
+        } else {
+            // Reset streak
+            setStreak({ count: 1, lastCompletedDate: today });
+        }
+    }
+  };
+
+  const value = { tasks, addTask, updateTask, deleteTask, isLoading, notifyTaskCompleted };
 
   return (
     <TasksContext.Provider value={value}>

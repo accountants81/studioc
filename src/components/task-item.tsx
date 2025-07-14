@@ -90,7 +90,7 @@ const statusIcons: Record<TaskStatus, React.ReactNode> = {
 }
 
 export function TaskItem({ task }: TaskItemProps) {
-  const { updateTask, deleteTask } = useContext(TasksContext);
+  const { updateTask, deleteTask, notifyTaskCompleted } = useContext(TasksContext);
   const { toast } = useToast();
   const [lang] = useLocalStorage<'ar' | 'en'>('app-lang', 'ar');
   const t = translations[lang];
@@ -98,6 +98,9 @@ export function TaskItem({ task }: TaskItemProps) {
   const handleStatusChange = (status: TaskStatus) => {
     updateTask(task.id, { ...task, status });
     toast({ title: `${t.statusUpdated} ${t[status]}` });
+    if(status === 'completed') {
+        notifyTaskCompleted();
+    }
   };
   
   const handleCheckedChange = (checked: boolean | 'indeterminate') => {
