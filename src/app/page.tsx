@@ -1,16 +1,14 @@
 "use client";
 
-import React, { useState, useMemo, useContext } from "react";
+import React, { useMemo, useContext } from "react";
 import { isToday, isFuture, isPast } from "date-fns";
 import { PageHeader } from "@/components/page-header";
 import { AddTaskDialog } from "@/components/add-task-dialog";
 import { TaskList } from "@/components/task-list";
-import { Task } from "@/lib/types";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Calendar as CalendarIcon } from "lucide-react";
+import { PlusCircle, Calendar as CalendarIcon, CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, Clock, AlertTriangle } from "lucide-react";
 import { TasksContext } from "@/contexts/task-provider";
 
 export default function DailyTasksPage() {
@@ -33,7 +31,7 @@ export default function DailyTasksPage() {
       </PageHeader>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">مهام قيد التنفيذ</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -42,7 +40,7 @@ export default function DailyTasksPage() {
             <div className="text-2xl font-bold">{tasks.filter(t => t.status === 'in-progress').length}</div>
           </CardContent>
         </Card>
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">مهام مكتملة</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
@@ -51,7 +49,7 @@ export default function DailyTasksPage() {
             <div className="text-2xl font-bold">{completedTasks.length}</div>
           </CardContent>
         </Card>
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">مهام متأخرة</CardTitle>
             <AlertTriangle className="h-4 w-4 text-destructive" />
@@ -60,7 +58,7 @@ export default function DailyTasksPage() {
             <div className="text-2xl font-bold">{overdueTasks.length}</div>
           </CardContent>
         </Card>
-        <Card className="shadow-md hover:shadow-lg transition-shadow">
+        <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">إجمالي المهام</CardTitle>
             <CalendarIcon className="h-4 w-4 text-muted-foreground" />

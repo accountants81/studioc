@@ -26,7 +26,7 @@ export function TimeFlowLogo({ className }: { className?: string }) {
                 strokeLinejoin="round"
             />
             </svg>
-        <span className="text-xl font-semibold text-sidebar-foreground">TimeFlow</span>
+        <span className="text-xl font-semibold text-sidebar-foreground">MomentumFlow</span>
     </div>
 
   );
