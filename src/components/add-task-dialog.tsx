@@ -79,7 +79,7 @@ const translations = {
     status: "الحالة",
     statusPlaceholder: "اختر الحالة",
     pending: "قيد الانتظار",
-    inProgress: "قيد التنفيذ",
+    'in-progress': "قيد التنفيذ",
     completed: "مكتملة",
     recurringTask: "مهمة متكررة",
     isRoutine: "هل هذه المهمة روتينية؟",
@@ -114,7 +114,7 @@ const translations = {
     status: "Status",
     statusPlaceholder: "Select status",
     pending: "Pending",
-    inProgress: "In Progress",
+    'in-progress': "In Progress",
     completed: "Completed",
     recurringTask: "Recurring Task",
     isRoutine: "Is this a routine task?",
@@ -186,6 +186,10 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
     }
     setOpen(false);
   }
+
+  const getPriorityTranslation = (p: typeof priorities[number]) => t[p];
+  const getCategoryTranslation = (c: typeof categories[number]) => t[c];
+  const getStatusTranslation = (s: typeof statuses[number]) => t[s];
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -280,7 +284,7 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
                       <SelectContent>
                         {priorities.map((p) => (
                           <SelectItem key={p} value={p}>
-                            {t[p]}
+                            {getPriorityTranslation(p)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -304,7 +308,7 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
                       <SelectContent>
                         {categories.map((c) => (
                           <SelectItem key={c} value={c}>
-                            {t[c]}
+                           {getCategoryTranslation(c)}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -328,9 +332,9 @@ export function AddTaskDialog({ children, task }: AddTaskDialogProps) {
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                             <SelectItem value="pending">{t.pending}</SelectItem>
-                             <SelectItem value="in-progress">{t.inProgress}</SelectItem>
-                             <SelectItem value="completed">{t.completed}</SelectItem>
+                             {statuses.map(s => (
+                                <SelectItem key={s} value={s}>{getStatusTranslation(s)}</SelectItem>
+                             ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />
