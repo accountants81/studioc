@@ -262,7 +262,7 @@ export default function SidebarNav() {
                 <Input 
                     placeholder={t.sectionNamePlaceholder}
                     value={newSectionName}
-                    onChange={(e) => setNewName(e.target.value)}
+                    onChange={(e) => setNewSectionName(e.target.value)}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
