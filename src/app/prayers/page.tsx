@@ -2,19 +2,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, X, BookOpen, Sunrise, Sunset } from "lucide-react";
+import { Check, X, BookOpen, Sunrise, Sunset, Plus, Trash2, Pause, Play } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { useLocalStorage } from "@/hooks/use-local-storage";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 
 const prayerTranslations = {
   ar: {
     pageTitle: "العبادات اليومية",
     prayersSection: "الصلوات الخمس",
-    adhkarSection: "الأذكار اليومية",
-    quranSection: "الورد القرآني",
+    adhkarSection: "الأذكار والعبادات اليومية",
     fajr: "الفجر",
     dhuhr: "الظهر",
     asr: "العصر",
@@ -23,14 +24,19 @@ const prayerTranslations = {
     morningAdhkar: "أذكار الصباح",
     eveningAdhkar: "أذكار المساء",
     quranWird: "الورد اليومي",
-    completed: "تمت",
-    pending: "لم تتم",
+    addWorship: "إضافة عبادة جديدة",
+    newWorshipTitle: "عبادة جديدة",
+    newWorshipPlaceholder: "مثال: الاستغفار 100 مرة",
+    add: "إضافة",
+    cancel: "إلغاء",
+    delete: "حذف",
+    deleteConfirmTitle: "هل أنت متأكد؟",
+    deleteConfirmDesc: "سيتم حذف هذه العبادة نهائيًا."
   },
   en: {
     pageTitle: "Daily Worship",
     prayersSection: "The Five Prayers",
-    adhkarSection: "Daily Adhkar",
-    quranSection: "Daily Quran Reading",
+    adhkarSection: "Daily Adhkar & Worship",
     fajr: "Fajr",
     dhuhr: "Dhuhr",
     asr: "Asr",
@@ -38,170 +44,212 @@ const prayerTranslations = {
     isha: "Isha",
     morningAdhkar: "Morning Adhkar",
     eveningAdhkar: "Evening Adhkar",
-    quranWird: "Daily Wird",
-    completed: "Completed",
-    pending: "Pending",
+    quranWird: "Daily Quran",
+    addWorship: "Add New Worship",
+    newWorshipTitle: "New Worship",
+    newWorshipPlaceholder: "e.g., Read a chapter of Quran",
+    add: "Add",
+    cancel: "Cancel",
+    delete: "Delete",
+    deleteConfirmTitle: "Are you sure?",
+    deleteConfirmDesc: "This worship item will be permanently deleted."
   },
 };
 
 type Prayer = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha";
-type Adhkar = "morning" | "evening" | "quran";
+type PrayerStatus = Record<Prayer, 'pending' | 'completed'>;
 
-type WorshipStatus = {
-  prayers: Record<Prayer, boolean>;
-  adhkar: Record<Adhkar, boolean>;
+type WorshipItem = {
+  id: string;
+  title: string;
+  status: 'pending' | 'in-progress' | 'completed';
 };
 
 const prayerList: Prayer[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
 
 const prayerCardColors: Record<Prayer, string> = {
-    fajr: "bg-[#1E4D2B] hover:bg-[#2A6A3B] border-[#2A6A3B]",
-    dhuhr: "bg-[#5D4037] hover:bg-[#795548] border-[#795548]",
-    asr: "bg-[#7B1F20] hover:bg-[#9E2B2C] border-[#9E2B2C]",
-    maghrib: "bg-[#283593] hover:bg-[#3949AB] border-[#3949AB]",
-    isha: "bg-[#1A237E] hover:bg-[#283593] border-[#283593]",
+    fajr: "bg-green-900/80 hover:bg-green-900 border-green-700",
+    dhuhr: "bg-amber-800/80 hover:bg-amber-800 border-amber-600",
+    asr: "bg-orange-900/80 hover:bg-orange-900 border-orange-700",
+    maghrib: "bg-blue-900/80 hover:bg-blue-900 border-blue-700",
+    isha: "bg-indigo-900/80 hover:bg-indigo-900 border-indigo-700",
 };
 
-const otherWorship: { key: Adhkar; icon: React.ElementType }[] = [
-    { key: "morning", icon: Sunrise },
-    { key: "evening", icon: Sunset },
-    { key: "quran", icon: BookOpen },
+
+const getInitialPrayers = (): PrayerStatus => ({
+    fajr: 'pending', dhuhr: 'pending', asr: 'pending', maghrib: 'pending', isha: 'pending'
+});
+
+const getInitialWorships = (t: typeof prayerTranslations.ar): WorshipItem[] => [
+    { id: 'w1', title: t.morningAdhkar, status: 'pending'},
+    { id: 'w2', title: t.eveningAdhkar, status: 'pending'},
+    { id: 'w3', title: t.quranWird, status: 'pending'},
 ];
 
 export default function PrayersPage() {
   const [lang] = useLocalStorage<'ar' | 'en'>("app-lang", "ar");
   const t = prayerTranslations[lang];
-  
-  const getInitialStatus = () => {
-    const today = new Date().toISOString().slice(0, 10);
-    const storedStatus = localStorage.getItem(`momentum-worship-${today}`);
-    if (storedStatus) {
-      const data = JSON.parse(storedStatus);
-      // Ensure all keys exist to prevent errors if the structure changes
-      return {
-          prayers: data.prayers || { fajr: false, dhuhr: false, asr: false, maghrib: false, isha: false },
-          adhkar: data.adhkar || { morning: false, evening: false, quran: false }
-      };
-    }
-    return {
-      prayers: { fajr: false, dhuhr: false, asr: false, maghrib: false, isha: false },
-      adhkar: { morning: false, evening: false, quran: false },
-    };
-  };
 
-  const [worshipStatus, setWorshipStatus] = useState<WorshipStatus>(getInitialStatus);
+  const [prayers, setPrayers] = useLocalStorage<PrayerStatus>('momentum-prayers-status', getInitialPrayers());
+  const [worshipItems, setWorshipItems] = useLocalStorage<WorshipItem[]>('momentum-worship-items-v2', getInitialWorships(t));
 
+  const [newWorshipName, setNewWorshipName] = useState("");
+
+  // This effect syncs the default items based on language, without overriding status or deleting user items.
   useEffect(() => {
-    const todayKey = `momentum-worship-${new Date().toISOString().slice(0, 10)}`;
-    const storedData = localStorage.getItem(todayKey);
-    if (!storedData) {
-        const resetStatus = {
-            prayers: { fajr: false, dhuhr: false, asr: false, maghrib: false, isha: false },
-            adhkar: { morning: false, evening: false, quran: false },
-        };
-        setWorshipStatus(resetStatus);
-        localStorage.setItem(todayKey, JSON.stringify(resetStatus));
-    } else {
-        setWorshipStatus(getInitialStatus());
-    }
-  }, []);
-  
-  useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10);
-    localStorage.setItem(`momentum-worship-${today}`, JSON.stringify(worshipStatus));
-  }, [worshipStatus]);
+    const defaultItems = getInitialWorships(t);
+    setWorshipItems(prevItems => {
+        const updatedItems = [...prevItems];
+        const defaultIds = new Set(defaultItems.map(item => item.id));
+
+        // Update titles for default items if language changes
+        defaultItems.forEach(defaultItem => {
+            const existingItem = updatedItems.find(item => item.id === defaultItem.id);
+            if (existingItem) {
+                existingItem.title = defaultItem.title;
+            } else {
+                // This case handles the very first load if localStorage is empty
+                updatedItems.push(defaultItem);
+            }
+        });
+        
+        // Filter out old default items that are no longer in the new language's defaults
+        // BUT keep user-added items (those without a default ID like 'w1', 'w2' etc)
+        return updatedItems.filter(item => {
+            const isUserAdded = !item.id.startsWith('w');
+            return isUserAdded || defaultIds.has(item.id);
+        });
+    });
+  }, [lang, t, setWorshipItems]);
 
   const togglePrayer = (prayer: Prayer) => {
-    setWorshipStatus((prev) => ({
+    setPrayers(prev => ({
       ...prev,
-      prayers: { ...prev.prayers, [prayer]: !prev.prayers[prayer] },
+      [prayer]: prev[prayer] === 'completed' ? 'pending' : 'completed',
     }));
   };
 
-  const toggleAdhkar = (item: Adhkar) => {
-    setWorshipStatus((prev) => ({
-      ...prev,
-      adhkar: { ...prev.adhkar, [item]: !prev.adhkar[item] },
-    }));
+  const handleWorshipStatusChange = (id: string, newStatus: WorshipItem['status']) => {
+    setWorshipItems(items => items.map(item => item.id === id ? {...item, status: newStatus} : item));
+  };
+  
+  const handleAddWorship = () => {
+    if (!newWorshipName.trim()) return;
+    const newItem: WorshipItem = {
+        id: crypto.randomUUID(),
+        title: newWorshipName,
+        status: 'pending'
+    };
+    setWorshipItems(prev => [...prev, newItem]);
+    setNewWorshipName("");
   };
 
-  const getAdhkarTranslation = (key: Adhkar) => {
-    if (key === 'morning') return t.morningAdhkar;
-    if (key === 'evening') return t.eveningAdhkar;
-    return t.quranWird;
+  const handleDeleteWorship = (id: string) => {
+    setWorshipItems(items => items.filter(item => item.id !== id));
   }
 
   return (
     <main className="container mx-auto py-4 sm:py-6 lg:py-8">
       <PageHeader title={t.pageTitle} />
-      <div className="max-w-2xl mx-auto space-y-12">
+      <div className="max-w-4xl mx-auto space-y-12">
         
-        {/* Five Prayers Section */}
-        <div>
-            <h2 className="text-2xl font-bold text-center mb-6 text-foreground">{t.prayersSection}</h2>
-            <div className="space-y-3">
-            {prayerList.map((prayer) => (
-                <Card
-                key={prayer}
-                className={cn(
-                    "transition-all duration-300 border text-primary-foreground",
-                    prayerCardColors[prayer]
-                )}
-                >
-                <CardContent className="p-4 flex items-center justify-between">
-                    <span className="text-xl font-semibold">
-                    {t[prayer]}
-                    </span>
-                    <Button
+        <Card className="bg-card/50">
+            <CardHeader>
+                <CardTitle className="text-center text-2xl font-bold text-foreground">{t.prayersSection}</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {prayerList.map((prayer) => (
+                    <Card
+                        key={prayer}
                         onClick={() => togglePrayer(prayer)}
-                        variant="ghost"
-                        size="icon"
                         className={cn(
-                            "h-10 w-10 rounded-full transition-colors",
-                            worshipStatus.prayers[prayer] ? "bg-green-500/80 hover:bg-green-500" : "bg-black/20 hover:bg-black/40"
+                            "transition-all duration-300 border text-primary-foreground cursor-pointer text-center p-4 rounded-lg flex flex-col items-center justify-center gap-2 min-h-[100px] hover:-translate-y-1 hover:shadow-lg",
+                            prayerCardColors[prayer],
+                            prayers[prayer] === 'completed' && 'ring-4 ring-green-500'
                         )}
                     >
-                        {worshipStatus.prayers[prayer] ? <Check /> : <X />}
-                    </Button>
-                </CardContent>
-                </Card>
-            ))}
-            </div>
-        </div>
+                        <span className="text-xl font-semibold">{t[prayer]}</span>
+                        {prayers[prayer] === 'completed' ? <Check size={24} /> : <X size={24} />}
+                    </Card>
+                ))}
+            </CardContent>
+        </Card>
 
-        {/* Adhkar Section */}
-        <div>
-            <h2 className="text-2xl font-bold text-center mb-6 text-foreground">{t.adhkarSection}</h2>
-            <div className="space-y-3">
-              {otherWorship.map(({ key, icon: Icon }) => (
+        <Card className="bg-card/50">
+            <CardHeader>
+                <div className="flex justify-between items-center">
+                    <CardTitle className="text-xl font-bold text-foreground">{t.adhkarSection}</CardTitle>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full bg-primary/10 text-primary hover:bg-primary/20">
+                                <Plus />
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                            <AlertDialogTitle>{t.addWorship}</AlertDialogTitle>
+                            </AlertDialogHeader>
+                            <Input 
+                                placeholder={t.newWorshipPlaceholder}
+                                value={newWorshipName}
+                                onChange={e => setNewWorshipName(e.target.value)}
+                            />
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleAddWorship} disabled={!newWorshipName.trim()}>{t.add}</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {worshipItems.map((item) => (
                  <Card
-                    key={key}
-                    className="transition-all duration-300 border bg-card hover:bg-accent"
+                    key={item.id}
+                    className="transition-all duration-300 border bg-card/70 hover:shadow-md flex items-center p-3 pr-1"
                 >
-                    <CardContent className="p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                           <Icon className="h-6 w-6 text-primary" />
-                           <span className="text-xl font-semibold text-card-foreground">
-                             {getAdhkarTranslation(key)}
-                           </span>
-                        </div>
-                        <Button
-                            onClick={() => toggleAdhkar(key)}
-                            variant="ghost"
-                            size="icon"
-                            className={cn(
-                                "h-10 w-10 rounded-full transition-colors",
-                                worshipStatus.adhkar[key] ? "bg-green-500/80 hover:bg-green-500 text-primary-foreground" : "bg-muted hover:bg-muted/80"
-                            )}
-                        >
-                            {worshipStatus.adhkar[key] ? <Check /> : <X />}
+                    <span className="flex-1 text-lg font-medium text-card-foreground">{item.title}</span>
+                    <div className="flex items-center gap-1">
+                        <Button 
+                            variant="ghost" size="icon"
+                             onClick={() => handleWorshipStatusChange(item.id, 'pending')}
+                            className={cn("rounded-full h-9 w-9", item.status === 'pending' && "bg-red-500/80 text-white")}>
+                            <X size={20}/>
                         </Button>
-                    </CardContent>
+                        <Button 
+                            variant="ghost" size="icon" 
+                            onClick={() => handleWorshipStatusChange(item.id, 'in-progress')}
+                            className={cn("rounded-full h-9 w-9", item.status === 'in-progress' && "bg-orange-500/80 text-white")}>
+                            <Pause size={16} fill="currentColor" />
+                        </Button>
+                        <Button 
+                            variant="ghost" size="icon" 
+                            onClick={() => handleWorshipStatusChange(item.id, 'completed')}
+                            className={cn("rounded-full h-9 w-9", item.status === 'completed' && "bg-green-500/80 text-white")}>
+                            <Check size={20}/>
+                        </Button>
+                         <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive h-9 w-9 rounded-full">
+                                    <Trash2 size={18} />
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>{t.deleteConfirmTitle}</AlertDialogTitle>
+                                    <AlertDialogDescription>{t.deleteConfirmDesc}</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>{t.cancel}</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDeleteWorship(item.id)} className="bg-destructive hover:bg-destructive/90">{t.delete}</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </div>
                 </Card>
               ))}
-            </div>
-        </div>
-        
+            </CardContent>
+        </Card>
       </div>
     </main>
   );
