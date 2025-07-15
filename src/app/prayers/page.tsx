@@ -92,6 +92,7 @@ export default function PrayersPage() {
 
   const [prayers, setPrayers] = useLocalStorage<PrayerStatus>('momentum-prayers-status', getInitialPrayers());
   const [worshipItems, setWorshipItems] = useLocalStorage<WorshipItem[]>('momentum-worship-items-v2', getInitialWorships(t));
+  const [lastResetDate, setLastResetDate] = useLocalStorage<string>('lastWorshipResetDate', '');
 
   const [newWorshipName, setNewWorshipName] = useState("");
 
@@ -145,15 +146,25 @@ export default function PrayersPage() {
   
   // Daily Reset Logic
   useEffect(() => {
-    const today = new Date().toDateString();
-    const lastResetDate = localStorage.getItem('lastWorshipResetDate');
-    
-    if (lastResetDate !== today) {
+    const checkAndResetData = () => {
+      const today = new Date().toDateString();
+      if (lastResetDate !== today) {
+        console.log("New day detected. Resetting daily data.");
         setPrayers(getInitialPrayers());
         setWorshipItems(prev => prev.map(item => ({...item, status: 'pending'})));
-        localStorage.setItem('lastWorshipResetDate', today);
-    }
-  }, [setPrayers, setWorshipItems]);
+        setLastResetDate(today);
+      }
+    };
+
+    checkAndResetData(); // Check on initial component load
+
+    // Set up an interval to check for the new day
+    const interval = setInterval(() => {
+        checkAndResetData();
+    }, 60 * 1000); // Check every minute
+
+    return () => clearInterval(interval); // Cleanup on component unmount
+  }, [lastResetDate, setLastResetDate, setPrayers, setWorshipItems]);
 
   return (
     <main className="container mx-auto py-4 sm:py-6 lg:py-8">

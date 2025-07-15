@@ -39,6 +39,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Input } from "./ui/input";
 import React from "react";
 import { Button } from "./ui/button";
+import { DigitalClock } from "./digital-clock";
 
 const translations = {
   ar: {
@@ -267,6 +268,7 @@ export default function SidebarNav() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="flex-col !items-start gap-1">
+        <DigitalClock />
          <Button variant="ghost" className="w-full justify-start" onClick={toggleLanguage}>
             <Languages className="mr-2 h-4 w-4" />
             <span>{t.changeLang}</span>
