@@ -68,11 +68,11 @@ type WorshipItem = {
 const prayerList: Prayer[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
 
 const prayerCardColors: Record<Prayer, string> = {
-    fajr: "bg-green-900/80 hover:bg-green-900 border-green-700",
+    fajr: "bg-cyan-900/80 hover:bg-cyan-900 border-cyan-700",
     dhuhr: "bg-amber-800/80 hover:bg-amber-800 border-amber-600",
     asr: "bg-orange-900/80 hover:bg-orange-900 border-orange-700",
-    maghrib: "bg-blue-900/80 hover:bg-blue-900 border-blue-700",
-    isha: "bg-indigo-900/80 hover:bg-indigo-900 border-indigo-700",
+    maghrib: "bg-indigo-900/80 hover:bg-indigo-900 border-indigo-700",
+    isha: "bg-slate-900/80 hover:bg-slate-900 border-slate-700",
 };
 
 
@@ -95,26 +95,21 @@ export default function PrayersPage() {
 
   const [newWorshipName, setNewWorshipName] = useState("");
 
-  // This effect syncs the default items based on language, without overriding status or deleting user items.
   useEffect(() => {
     const defaultItems = getInitialWorships(t);
     setWorshipItems(prevItems => {
         const updatedItems = [...prevItems];
         const defaultIds = new Set(defaultItems.map(item => item.id));
 
-        // Update titles for default items if language changes
         defaultItems.forEach(defaultItem => {
             const existingItem = updatedItems.find(item => item.id === defaultItem.id);
             if (existingItem) {
                 existingItem.title = defaultItem.title;
             } else {
-                // This case handles the very first load if localStorage is empty
                 updatedItems.push(defaultItem);
             }
         });
         
-        // Filter out old default items that are no longer in the new language's defaults
-        // BUT keep user-added items (those without a default ID like 'w1', 'w2' etc)
         return updatedItems.filter(item => {
             const isUserAdded = !item.id.startsWith('w');
             return isUserAdded || defaultIds.has(item.id);
@@ -165,7 +160,7 @@ export default function PrayersPage() {
                         className={cn(
                             "transition-all duration-300 border text-primary-foreground cursor-pointer text-center p-4 rounded-lg flex flex-col items-center justify-center gap-2 min-h-[100px] hover:-translate-y-1 hover:shadow-lg",
                             prayerCardColors[prayer],
-                            prayers[prayer] === 'completed' && 'ring-4 ring-green-500'
+                            prayers[prayer] === 'completed' && 'ring-4 ring-offset-2 ring-offset-background ring-green-500'
                         )}
                     >
                         <span className="text-xl font-semibold">{t[prayer]}</span>
