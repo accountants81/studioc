@@ -68,11 +68,11 @@ type WorshipItem = {
 const prayerList: Prayer[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
 
 const prayerCardColors: Record<Prayer, string> = {
-    fajr: "bg-cyan-900/80 hover:bg-cyan-900 border-cyan-700",
-    dhuhr: "bg-amber-800/80 hover:bg-amber-800 border-amber-600",
-    asr: "bg-orange-900/80 hover:bg-orange-900 border-orange-700",
-    maghrib: "bg-indigo-900/80 hover:bg-indigo-900 border-indigo-700",
-    isha: "bg-slate-900/80 hover:bg-slate-900 border-slate-700",
+    fajr: "bg-cyan-900/80 hover:bg-cyan-900/90 border-cyan-700/80",
+    dhuhr: "bg-sky-800/80 hover:bg-sky-800/90 border-sky-600/80",
+    asr: "bg-amber-800/80 hover:bg-amber-800/90 border-amber-600/80",
+    maghrib: "bg-orange-900/80 hover:bg-orange-900/90 border-orange-700/80",
+    isha: "bg-indigo-950/80 hover:bg-indigo-950/90 border-indigo-800/80",
 };
 
 
