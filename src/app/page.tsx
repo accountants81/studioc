@@ -25,7 +25,7 @@ const translations = {
     overdueTasks: "مهام متأخرة",
     totalTasks: "إجمالي المهام",
     ofTotal: "من الإجمالي",
-    noTasks: "لا توجد مهام",
+    noTasks: "لا توجد مهام بعد",
     registeredTasks: "لديك {count} مهام مسجلة",
     assistant: "المساعد الذكي",
     assistantError: "حدث خطأ أثناء محاولة الحصول على اقتراح. حاول مرة أخرى.",

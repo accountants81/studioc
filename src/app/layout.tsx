@@ -20,7 +20,7 @@ export default function RootLayout({
   const [lang] = useLocalStorage('app-lang', 'ar');
 
   useEffect(() => {
-    document.title = lang === 'ar' ? 'تدفق الإنجاز | MomentumFlow' : 'MomentumFlow | Organize Your Time';
+    document.title = lang === 'ar' ? 'تدفق الزخم | MomentumFlow' : 'MomentumFlow | Organize Your Time';
   }, [lang]);
 
   return (
