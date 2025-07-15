@@ -3,7 +3,7 @@ import { useLocalStorage } from "@/hooks/use-local-storage";
 
 export function TimeFlowLogo({ className }: { className?: string }) {
   const [lang] = useLocalStorage<'ar' | 'en'>('app-lang', 'ar');
-  const appName = lang === 'ar' ? "MomentumFlow" : "MomentumFlow";
+  const appName = lang === 'ar' ? "تدفق الإنجاز" : "MomentumFlow";
 
   return (
     <div className={cn("flex items-center gap-2", className)}>
