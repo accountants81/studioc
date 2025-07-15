@@ -31,7 +31,8 @@ import {
   Bot,
   Cloud,
   Lightbulb,
-  Camera
+  Camera,
+  Moon,
 } from "lucide-react";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog";
@@ -55,6 +56,7 @@ const translations = {
     ideas: "أفكاري المجنونة",
     vault: "الخزنة الخاصة",
     memories: "الذكريات",
+    prayers: "العبادات اليومية",
     addSection: "إضافة قسم جديد",
     deleteSectionTitle: 'هل أنت متأكد من حذف قسم "{sectionName}"؟',
     deleteSectionDesc: "سيتم حذف هذا القسم وجميع الملاحظات الموجودة بداخله نهائيًا. لا يمكن التراجع عن هذا الإجراء.",
@@ -68,7 +70,8 @@ const translations = {
     customSections: "أقسامي الخاصة",
     tasks: "المهام",
     personal: "شخصي",
-    growth: "النمو والإلهام"
+    growth: "النمو والإلهام",
+    worship: "العبادات والتزكية"
   },
   en: {
     dashboard: "Dashboard",
@@ -85,6 +88,7 @@ const translations = {
     ideas: "Crazy Ideas",
     vault: "Private Vault",
     memories: "Memories",
+    prayers: "Daily Worship",
     addSection: "Add New Section",
     deleteSectionTitle: 'Are you sure you want to delete "{sectionName}"?',
     deleteSectionDesc: "This section and all its notes will be permanently deleted. This action cannot be undone.",
@@ -98,7 +102,8 @@ const translations = {
     customSections: "My Sections",
     tasks: "Tasks",
     personal: "Personal",
-    growth: "Growth & Inspiration"
+    growth: "Growth & Inspiration",
+    worship: "Worship & Purity"
   },
 };
 
@@ -128,6 +133,10 @@ export default function SidebarNav() {
     { href: "/ongoing", label: t.ongoing, icon: Repeat },
   ];
 
+  const worshipNavItems = [
+      { href: "/prayers", label: t.prayers, icon: Moon },
+  ];
+
   const personalNavItems = [
       { href: "/notes", label: t.notes, icon: Notebook },
       { href: "/voice-memos", label: t.voiceMemos, icon: Mic },
@@ -152,7 +161,8 @@ export default function SidebarNav() {
         id: crypto.randomUUID(),
         name: newSectionName.trim(),
       };
-      setCustomSections(prevSections => [...prevSections, newSection]);
+      const updatedSections = [...customSections, newSection];
+      setCustomSections(updatedSections);
       router.push(`/custom/${newSection.id}`);
       handleLinkClick();
       setNewSectionName("");
@@ -206,6 +216,8 @@ export default function SidebarNav() {
           {renderNavSection(mainNavItems)}
           <SidebarMenuItem className="px-2 pt-2 text-xs font-semibold text-muted-foreground tracking-wider">{t.tasks}</SidebarMenuItem>
           {renderNavSection(taskNavItems)}
+          <SidebarMenuItem className="px-2 pt-2 text-xs font-semibold text-muted-foreground tracking-wider">{t.worship}</SidebarMenuItem>
+          {renderNavSection(worshipNavItems)}
           <SidebarMenuItem className="px-2 pt-2 text-xs font-semibold text-muted-foreground tracking-wider">{t.personal}</SidebarMenuItem>
           {renderNavSection(personalNavItems)}
           <SidebarMenuItem className="px-2 pt-2 text-xs font-semibold text-muted-foreground tracking-wider">{t.growth}</SidebarMenuItem>
@@ -294,6 +306,3 @@ export default function SidebarNav() {
     </>
   );
 }
-
-
-
