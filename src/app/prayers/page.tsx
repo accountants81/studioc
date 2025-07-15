@@ -142,6 +142,18 @@ export default function PrayersPage() {
   const handleDeleteWorship = (id: string) => {
     setWorshipItems(items => items.filter(item => item.id !== id));
   }
+  
+  // Daily Reset Logic
+  useEffect(() => {
+    const today = new Date().toDateString();
+    const lastResetDate = localStorage.getItem('lastWorshipResetDate');
+    
+    if (lastResetDate !== today) {
+        setPrayers(getInitialPrayers());
+        setWorshipItems(prev => prev.map(item => ({...item, status: 'pending'})));
+        localStorage.setItem('lastWorshipResetDate', today);
+    }
+  }, [setPrayers, setWorshipItems]);
 
   return (
     <main className="container mx-auto py-4 sm:py-6 lg:py-8">
