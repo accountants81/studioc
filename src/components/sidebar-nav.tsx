@@ -266,7 +266,7 @@ export default function SidebarNav() {
           ))}
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="gap-0">
+      <SidebarFooter className="flex-col !items-start gap-1">
          <Button variant="ghost" className="w-full justify-start" onClick={toggleLanguage}>
             <Languages className="mr-2 h-4 w-4" />
             <span>{t.changeLang}</span>

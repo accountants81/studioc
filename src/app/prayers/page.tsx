@@ -2,7 +2,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, X } from "lucide-react";
+import { Check, X, BookOpen, Sunrise, Sunset } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,121 +12,196 @@ import { cn } from "@/lib/utils";
 const prayerTranslations = {
   ar: {
     pageTitle: "العبادات اليومية",
-    sectionTitle: "الصلوات الخمس",
+    prayersSection: "الصلوات الخمس",
+    adhkarSection: "الأذكار اليومية",
+    quranSection: "الورد القرآني",
     fajr: "الفجر",
     dhuhr: "الظهر",
     asr: "العصر",
     maghrib: "المغرب",
     isha: "العشاء",
+    morningAdhkar: "أذكار الصباح",
+    eveningAdhkar: "أذكار المساء",
+    quranWird: "الورد اليومي",
     completed: "تمت",
     pending: "لم تتم",
   },
   en: {
     pageTitle: "Daily Worship",
-    sectionTitle: "The Five Prayers",
+    prayersSection: "The Five Prayers",
+    adhkarSection: "Daily Adhkar",
+    quranSection: "Daily Quran Reading",
     fajr: "Fajr",
     dhuhr: "Dhuhr",
     asr: "Asr",
     maghrib: "Maghrib",
     isha: "Isha",
+    morningAdhkar: "Morning Adhkar",
+    eveningAdhkar: "Evening Adhkar",
+    quranWird: "Daily Wird",
     completed: "Completed",
     pending: "Pending",
   },
 };
 
 type Prayer = "fajr" | "dhuhr" | "asr" | "maghrib" | "isha";
-type PrayerStatus = Record<Prayer, boolean>;
+type Adhkar = "morning" | "evening" | "quran";
+
+type WorshipStatus = {
+  prayers: Record<Prayer, boolean>;
+  adhkar: Record<Adhkar, boolean>;
+};
 
 const prayerList: Prayer[] = ["fajr", "dhuhr", "asr", "maghrib", "isha"];
 
 const prayerCardColors: Record<Prayer, string> = {
-    fajr: "bg-green-100/60 dark:bg-green-900/40 border-green-500/30",
-    dhuhr: "bg-yellow-100/60 dark:bg-yellow-900/30 border-yellow-500/30",
-    asr: "bg-orange-100/60 dark:bg-orange-900/30 border-orange-500/30",
-    maghrib: "bg-blue-100/60 dark:bg-blue-900/30 border-blue-500/30",
-    isha: "bg-indigo-100/60 dark:bg-indigo-900/30 border-indigo-500/30",
+    fajr: "bg-[#1E4D2B] hover:bg-[#2A6A3B] border-[#2A6A3B]",
+    dhuhr: "bg-[#5D4037] hover:bg-[#795548] border-[#795548]",
+    asr: "bg-[#7B1F20] hover:bg-[#9E2B2C] border-[#9E2B2C]",
+    maghrib: "bg-[#283593] hover:bg-[#3949AB] border-[#3949AB]",
+    isha: "bg-[#1A237E] hover:bg-[#283593] border-[#283593]",
 };
+
+const otherWorship: { key: Adhkar; icon: React.ElementType }[] = [
+    { key: "morning", icon: Sunrise },
+    { key: "evening", icon: Sunset },
+    { key: "quran", icon: BookOpen },
+];
 
 export default function PrayersPage() {
   const [lang] = useLocalStorage<'ar' | 'en'>("app-lang", "ar");
   const t = prayerTranslations[lang];
   
-  const getInitialPrayerStatus = () => {
+  const getInitialStatus = () => {
     const today = new Date().toISOString().slice(0, 10);
-    const storedStatus = localStorage.getItem(`momentum-prayers-${today}`);
+    const storedStatus = localStorage.getItem(`momentum-worship-${today}`);
     if (storedStatus) {
-      return JSON.parse(storedStatus);
+      const data = JSON.parse(storedStatus);
+      // Ensure all keys exist to prevent errors if the structure changes
+      return {
+          prayers: data.prayers || { fajr: false, dhuhr: false, asr: false, maghrib: false, isha: false },
+          adhkar: data.adhkar || { morning: false, evening: false, quran: false }
+      };
     }
     return {
-      fajr: false,
-      dhuhr: false,
-      asr: false,
-      maghrib: false,
-      isha: false,
+      prayers: { fajr: false, dhuhr: false, asr: false, maghrib: false, isha: false },
+      adhkar: { morning: false, evening: false, quran: false },
     };
   };
 
-  const [prayerStatus, setPrayerStatus] = useState<PrayerStatus>(getInitialPrayerStatus);
+  const [worshipStatus, setWorshipStatus] = useState<WorshipStatus>(getInitialStatus);
 
   useEffect(() => {
-    // Reset prayers every new day
-    const todayKey = `momentum-prayers-${new Date().toISOString().slice(0, 10)}`;
+    const todayKey = `momentum-worship-${new Date().toISOString().slice(0, 10)}`;
     const storedData = localStorage.getItem(todayKey);
     if (!storedData) {
-        const resetStatus = { fajr: false, dhuhr: false, asr: false, maghrib: false, isha: false };
-        setPrayerStatus(resetStatus);
+        const resetStatus = {
+            prayers: { fajr: false, dhuhr: false, asr: false, maghrib: false, isha: false },
+            adhkar: { morning: false, evening: false, quran: false },
+        };
+        setWorshipStatus(resetStatus);
         localStorage.setItem(todayKey, JSON.stringify(resetStatus));
+    } else {
+        setWorshipStatus(getInitialStatus());
     }
   }, []);
   
   useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
-    localStorage.setItem(`momentum-prayers-${today}`, JSON.stringify(prayerStatus));
-  }, [prayerStatus]);
+    localStorage.setItem(`momentum-worship-${today}`, JSON.stringify(worshipStatus));
+  }, [worshipStatus]);
 
   const togglePrayer = (prayer: Prayer) => {
-    setPrayerStatus((prevStatus) => ({
-      ...prevStatus,
-      [prayer]: !prevStatus[prayer],
+    setWorshipStatus((prev) => ({
+      ...prev,
+      prayers: { ...prev.prayers, [prayer]: !prev.prayers[prayer] },
     }));
   };
+
+  const toggleAdhkar = (item: Adhkar) => {
+    setWorshipStatus((prev) => ({
+      ...prev,
+      adhkar: { ...prev.adhkar, [item]: !prev.adhkar[item] },
+    }));
+  };
+
+  const getAdhkarTranslation = (key: Adhkar) => {
+    if (key === 'morning') return t.morningAdhkar;
+    if (key === 'evening') return t.eveningAdhkar;
+    return t.quranWird;
+  }
 
   return (
     <main className="container mx-auto py-4 sm:py-6 lg:py-8">
       <PageHeader title={t.pageTitle} />
-      <div className="max-w-2xl mx-auto">
-        <h2 className="text-2xl font-bold text-center mb-6 text-foreground">{t.sectionTitle}</h2>
-        <div className="space-y-4">
-          {prayerList.map((prayer) => (
-            <Card
-              key={prayer}
-              className={cn(
-                "transition-all duration-300",
-                prayerCardColors[prayer],
-                prayerStatus[prayer] ? "shadow-lg scale-105" : "shadow-sm"
-              )}
-            >
-              <CardContent className="p-4 flex items-center justify-between">
-                <span className="text-xl font-semibold text-card-foreground">
-                  {t[prayer]}
-                </span>
-                <div className="flex items-center gap-2">
-                  <Button
-                    onClick={() => togglePrayer(prayer)}
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                        "h-10 w-10 rounded-full transition-colors",
-                        prayerStatus[prayer] ? "bg-green-500/20 text-green-600 dark:text-green-400" : "bg-red-500/10 text-red-600 dark:text-red-400"
-                    )}
-                  >
-                    {prayerStatus[prayer] ? <Check /> : <X />}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+      <div className="max-w-2xl mx-auto space-y-12">
+        
+        {/* Five Prayers Section */}
+        <div>
+            <h2 className="text-2xl font-bold text-center mb-6 text-foreground">{t.prayersSection}</h2>
+            <div className="space-y-3">
+            {prayerList.map((prayer) => (
+                <Card
+                key={prayer}
+                className={cn(
+                    "transition-all duration-300 border text-primary-foreground",
+                    prayerCardColors[prayer]
+                )}
+                >
+                <CardContent className="p-4 flex items-center justify-between">
+                    <span className="text-xl font-semibold">
+                    {t[prayer]}
+                    </span>
+                    <Button
+                        onClick={() => togglePrayer(prayer)}
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                            "h-10 w-10 rounded-full transition-colors",
+                            worshipStatus.prayers[prayer] ? "bg-green-500/80 hover:bg-green-500" : "bg-black/20 hover:bg-black/40"
+                        )}
+                    >
+                        {worshipStatus.prayers[prayer] ? <Check /> : <X />}
+                    </Button>
+                </CardContent>
+                </Card>
+            ))}
+            </div>
         </div>
+
+        {/* Adhkar Section */}
+        <div>
+            <h2 className="text-2xl font-bold text-center mb-6 text-foreground">{t.adhkarSection}</h2>
+            <div className="space-y-3">
+              {otherWorship.map(({ key, icon: Icon }) => (
+                 <Card
+                    key={key}
+                    className="transition-all duration-300 border bg-card hover:bg-accent"
+                >
+                    <CardContent className="p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                           <Icon className="h-6 w-6 text-primary" />
+                           <span className="text-xl font-semibold text-card-foreground">
+                             {getAdhkarTranslation(key)}
+                           </span>
+                        </div>
+                        <Button
+                            onClick={() => toggleAdhkar(key)}
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                                "h-10 w-10 rounded-full transition-colors",
+                                worshipStatus.adhkar[key] ? "bg-green-500/80 hover:bg-green-500 text-primary-foreground" : "bg-muted hover:bg-muted/80"
+                            )}
+                        >
+                            {worshipStatus.adhkar[key] ? <Check /> : <X />}
+                        </Button>
+                    </CardContent>
+                </Card>
+              ))}
+            </div>
+        </div>
+        
       </div>
     </main>
   );
