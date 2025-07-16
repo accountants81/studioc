@@ -190,7 +190,7 @@ export default function SidebarNav() {
   const renderNavSection = (items: {href: string, label: string, icon: React.ElementType}[]) => (
       items.map((item) => (
             <SidebarMenuItem key={item.href}>
-              <Link href={item.href} onClick={handleLinkClick}>
+              <Link href={item.href} onClick={handleLinkClick} prefetch={true}>
                 <SidebarMenuButton
                   as="a"
                   isActive={pathname === item.href}
@@ -229,7 +229,7 @@ export default function SidebarNav() {
           )}
            {customSections.map((section) => (
             <SidebarMenuItem key={section.id} className="group/item">
-              <Link href={`/custom/${section.id}`} onClick={handleLinkClick}>
+              <Link href={`/custom/${section.id}`} onClick={handleLinkClick} prefetch={true}>
                 <SidebarMenuButton
                   as="a"
                   isActive={pathname === `/custom/${section.id}`}
