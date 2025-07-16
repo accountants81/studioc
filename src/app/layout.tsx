@@ -6,6 +6,19 @@ import { TaskProvider } from "@/contexts/task-provider";
 import AppShell from "@/components/app-shell";
 import { useLocalStorage } from '@/hooks/use-local-storage';
 import { useEffect } from 'react';
+import { Cairo, Inter } from 'next/font/google';
+
+const cairo = Cairo({
+  subsets: ['arabic', 'latin'],
+  variable: '--font-cairo',
+  display: 'swap',
+});
+
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 // export const metadata: Metadata = {
 //   title: 'MomentumFlow',
@@ -20,17 +33,13 @@ export default function RootLayout({
   const [lang] = useLocalStorage('app-lang', 'ar');
 
   useEffect(() => {
-    document.title = lang === 'ar' ? 'تدفق الزخم | MomentumFlow' : 'MomentumFlow | Organize Your Time';
+    document.title = lang === 'ar' ? 'تدفق الزخم' : 'MomentumFlow';
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
   }, [lang]);
 
   return (
-    <html lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'} className='dark' style={{ colorScheme: 'dark' }}>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet" />
-      </head>
+    <html lang={lang} dir={lang === 'ar' ? 'rtl' : 'ltr'} className={`dark ${cairo.variable} ${inter.variable}`} style={{ colorScheme: 'dark' }}>
       <body className="font-body antialiased">
         <TaskProvider>
             <AppShell>
