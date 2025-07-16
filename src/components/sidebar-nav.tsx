@@ -86,7 +86,7 @@ const translations = {
     challenges: "Challenges",
     goals: "Goals",
     dreams: "My Dreams",
-    ideas: "Crazy Ideas",
+    crazyIdeas: "Crazy Ideas",
     vault: "Private Vault",
     memories: "Memories",
     prayers: "Daily Worship",

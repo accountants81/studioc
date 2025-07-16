@@ -10,7 +10,6 @@ import { PlusCircle, Calendar as CalendarIcon, CheckCircle, Clock, AlertTriangle
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { TasksContext } from "@/contexts/task-provider";
-import { getSuggestion } from "@/ai/flows/suggestion-flow";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLocalStorage } from "@/hooks/use-local-storage";
 import { Input } from "@/components/ui/input";
@@ -65,50 +64,6 @@ const translations = {
   },
 };
 
-function AssistantCard() {
-    const { tasks } = useContext(TasksContext);
-    const [suggestion, setSuggestion] = useState<string>("");
-    const [isLoading, setIsLoading] = useState(true);
-    const [lang] = useLocalStorage<'ar' | 'en'>('app-lang', 'ar');
-    const t = translations[lang];
-
-    useEffect(() => {
-        async function fetchSuggestion() {
-            try {
-                setIsLoading(true);
-                const relevantTasks = tasks.map(({ title, status, priority, category }) => ({ title, status, priority, category }));
-                const result = await getSuggestion({ tasks: relevantTasks, lang });
-                setSuggestion(result.suggestion);
-            } catch (error) {
-                console.error("Error fetching suggestion:", error);
-                setSuggestion(t.assistantError);
-            } finally {
-                setIsLoading(false);
-            }
-        }
-        fetchSuggestion();
-    }, [tasks, lang, t.assistantError]);
-
-
-    return (
-        <Card className="shadow-sm hover:shadow-md transition-shadow bg-primary/10 border-primary/30">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-primary">{t.assistant}</CardTitle>
-            <Sparkles className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-             {isLoading ? (
-                <div className="space-y-2 pt-2">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-3/4" />
-                </div>
-            ) : (
-                <p className="text-sm text-primary/90 pt-2">{suggestion}</p>
-            )}
-          </CardContent>
-        </Card>
-    )
-}
 
 function StreakCard() {
   const { streak } = useStreak();
@@ -216,11 +171,6 @@ export default function DailyTasksPage() {
             </p>
           </CardContent>
         </Card>
-        <StreakCard />
-      </div>
-
-      <div className="grid gap-4 lg:grid-cols-2 mb-8">
-        <AssistantCard />
         <Card className="shadow-sm hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t.totalTasks}</CardTitle>
@@ -232,6 +182,10 @@ export default function DailyTasksPage() {
           </CardContent>
         </Card>
       </div>
+      
+       <div className="mb-8">
+            <StreakCard />
+        </div>
 
        <div className="mb-8 relative">
         <Search className="absolute left-3 rtl:right-3 rtl:left-auto top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
